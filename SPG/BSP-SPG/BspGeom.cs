@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace dots_dev
+namespace SPG
 {
     public class BspGeom
     {

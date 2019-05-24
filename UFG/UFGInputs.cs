@@ -10,7 +10,7 @@ namespace UFG
     public class UFGInputs : GH_Component
     {
         public UFGInputs()
-          : base("UFG.0.0", "ufg.0.0",
+          : base("UFG", "iUfg",
             "Ensure Layer names are CAPITALIZED & match with A.0.0\nGenerates a set of solid geometry based on setbacks from street-types, fsr calculations and range of min-max heights",
             "DOTS", "UFG")
         {
@@ -19,22 +19,13 @@ namespace UFG
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             // 0.
-            pManager.AddTextParameter("Input-Streets", "inp.A.0", "Input for streets: Layer names (CAPITALIZED) separated by comma \nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
+            pManager.AddTextParameter("Input-Streets", "street-layer-names", "Input for streets: Layer names (CAPITALIZED) separated by comma \nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
             // 1.
-            pManager.AddTextParameter("Input-Setbacks", "inp.A.1", "Corresponding Input for setbacks: Enter numbers separated by comms\nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
+            pManager.AddTextParameter("Input-Setbacks", "corresponding-street-setbacks", "Corresponding Input for setbacks: Enter numbers separated by comms\nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
             // 2.
-            pManager.AddCurveParameter("Input-Site-Boundaries", "inp.B.0", "Select all site boundaries: closed planar curves (polylines, nurbs, etc)\nPreferred Input Type: CRV & select multiple curves", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Input-Site-Curves", "inp.B.0", "Select all site boundaries: closed planar curves (polylines, nurbs, etc)\nPreferred Input Type: CRV & select multiple curves", GH_ParamAccess.list);
             // 3. 
             pManager.AddNumberParameter("Input-FSR", "inp.C.0", "Default Value=2.5\nEnter a number for FSR calculations\nPreferred Input Type: NUMERIC SLIDER", GH_ParamAccess.item);
-            // 4.
-            // pManager.AddNumberParameter("Input-Max-Height", "inp.C.1", "Default Value=10.0\nEnter the maximum height\nPreferred Input Type: NUMERIC SLIDER", GH_ParamAccess.item);
-            // 5.
-            // pManager.AddNumberParameter("Input-Min-Height", "inp.C.2", "Default Value=0.0\nEnter the minimum height\nPreferred Input Type: NUMERIC SLIDER", GH_ParamAccess.item);
-            // 6.
-            // pManager.AddNumberParameter("Input-Magnitude-Rays", "inp.D.1", "Default Value= 100, type: double ", GH_ParamAccess.item);
-            // intersection inputs
-            // 6.
-            // pManager.AddIntegerParameter("Input-Number-Rays", "inp.D.0", "Default Value= 8, type: integer", GH_ParamAccess.item);
             }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)

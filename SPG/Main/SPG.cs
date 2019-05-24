@@ -6,9 +6,9 @@ using Rhino.Geometry;
 using Rhino;
 using Rhino.DocObjects;
 
-namespace dots_dev
+namespace SPG
 {
-    public class dotsdevSA : GH_Component
+    public class SPG : GH_Component
     {
         // global variables
         List<string> adjMatrixStr = new List<string>(); // adjacency matrix
@@ -17,8 +17,8 @@ namespace dots_dev
         List<string> geomObjLiStr = new List<string>(); // final geom object list as string
         List<GeomEntry> geomObjLi = new List<GeomEntry>();
 
-        public dotsdevSA()
-          : base("dots_dev", "inputs",
+        public SPG()
+          : base("spg-inputs", "iSpg",
               "spatial allocation using binary partition",
               "DOTS", "SPG")
         {

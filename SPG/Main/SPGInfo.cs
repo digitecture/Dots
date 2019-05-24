@@ -2,7 +2,8 @@
 using System.Drawing;
 using Grasshopper.Kernel;
 
-namespace dots_dev
+namespace SPG
+
 {
     public class dots_devInfo : GH_AssemblyInfo
     {
@@ -10,7 +11,7 @@ namespace dots_dev
         {
             get
             {
-                return "dotsdev";
+                return "SPG";
             }
         }
         public override Bitmap Icon

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace dots_dev
+namespace SPG
 {
     public class GeomEntry
     {

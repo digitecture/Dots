@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 using Rhino.Geometry;
 
-namespace ProjVan1
+namespace UFG
+
 {
     class BSPAlg
     {
