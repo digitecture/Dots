@@ -34,6 +34,7 @@ namespace UFG
             pManager.AddGeometryParameter("Output-Solid-Geometry", "out-solid-Geom", "outputs solid geometry -breps, surfaces, mesh convertible", GH_ParamAccess.list);
             // 1.
             pManager.AddTextParameter("Output-SITE-Numbers", "debug-numbers", "valid site numbers", GH_ParamAccess.item);
+            // 2.
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
