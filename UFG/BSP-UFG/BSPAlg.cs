@@ -29,6 +29,8 @@ namespace UFG
         double ROTATION = Math.PI/3; // {0, 2.PI}
         Point3d CEN;
 
+        List<BspObj> bspObjs;
+
         public BSPAlg() { }
 
         public BSPAlg(Curve crv, int numParcels, double devMeanAr, double devDim, double ratioAr, double rot, int numItrs)
@@ -44,6 +46,8 @@ namespace UFG
             CEN = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid;
             var xform = Rhino.Geometry.Transform.Rotation(ROTATION, CEN);
             SiteCrv.Transform(xform);
+
+            bspObjs = new List<BspObj>();
         }
 
         public Point3d getCentroid()
@@ -64,18 +68,18 @@ namespace UFG
 
         public void RUN_BSP_ALG()
         {
+            bspObjs =new List<BspObj>();
             Curve[] arr = FCURVE.ToArray();
             FCURVE = new List<Curve>();
 
             //run the bsp algorithm
             Curve crv = SiteCrv.DuplicateCurve();
             recSplit(crv, 0);
+            bspObjs.Add(new BspObj(FCURVE, MAX_DEV_MEAN_AREA, MAX_DEV_DIM, MAX_DEV_RATIO_AREA, redoCounter));
 
             // RECURSIVELY optimize the parcel generation strategy
             redoCounter++;
-            
-            bool t = PostProcess(); 
-            if (t == true && redoCounter < MAX_ITERATION) { RUN_BSP_ALG(); }
+            if (redoCounter < MAX_ITERATION) { RUN_BSP_ALG(); }
             else
             {
                 var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
@@ -225,66 +229,5 @@ namespace UFG
             return pts;
         }
 
-        public bool PostProcess() {
-            // 3 constraints from GUI, file : BSP file
-            // MAX_DEV_MEAN_AREA : mean of all parcels / ar of each parcel 
-            // MAX_DEV_DIM : hor dim / ver dim || vice-versa
-            // MAX_DEV_RATIO_AREA : bounding box area to curve area
-
-            bool REDO = false;
-            double ar = 0.0;
-            for (int i = 0; i < FCURVE.Count; i++)
-            {
-                try
-                {
-                    ar += Rhino.Geometry.AreaMassProperties.Compute(FCURVE[i]).Area;
-                }
-                catch (Exception) { }
-            }
-            double meanAr = ar / FCURVE.Count();
-            double minArPer = MAX_DEV_MEAN_AREA * meanAr; // con 1: from BSP file 
-            double maxArPer = (MAX_DEV_MEAN_AREA + 1) * meanAr;
-            // condition 1 
-            for (int i=0; i<FCURVE.Count; i++)
-            {
-                double Ar = Rhino.Geometry.AreaMassProperties.Compute(FCURVE[i]).Area;
-                if (Ar < minArPer || Ar>maxArPer) // con 1: from BSP file 
-                {
-                    REDO = true;
-                    MSG += "\ncondition. 1:" + redoCounter.ToString();
-                    break;
-                }
-            }
-            
-            for(int i=0; i<FCURVE.Count; i++)
-            {
-                var T = FCURVE[i].GetBoundingBox(true);
-                var a = T.Min;
-                var c = T.Max;
-                var b = new Point3d(c.X, a.Y, 0);
-                var d = new Point3d(a.X, c.Y, 0);
-                Point3d[] pts = { a, b, c, d, a };
-                PolylineCurve crv = new PolylineCurve(pts);
-                double verDi = a.DistanceTo(d);
-                double horDi = a.DistanceTo(b);
-                // condition 2 : from GUI, file : BSP file
-                if (horDi/verDi < MAX_DEV_DIM || verDi / horDi < MAX_DEV_DIM) // con 2: from BSP file 
-                {
-                    REDO = true;
-                    MSG += "\ncondition. 2:" + redoCounter.ToString();
-                    break;
-                }
-                double ArBB = Rhino.Geometry.AreaMassProperties.Compute(crv).Area; // area of bounding box
-                double ArCrv = Rhino.Geometry.AreaMassProperties.Compute(FCURVE[i]).Area; // actual area of the curve
-                // condition 3 : from GUI, file : BSP file
-                if (ArCrv / ArBB < MAX_DEV_RATIO_AREA) // con 3: from BSP file 
-                {
-                    REDO = true;
-                    MSG += "\ncondition. 3:" + redoCounter.ToString();
-                    break;
-                }
-            }
-            return REDO;
-        }
     }
 }
