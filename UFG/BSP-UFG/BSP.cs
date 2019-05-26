@@ -12,6 +12,7 @@ namespace UFG
         List<double> scoreLi = new List<double>();
         List<BspObj> bspObjLi = new List<BspObj>();
         List<Curve> thisFCRVS = new List<Curve>();
+        List<List<Curve>> allFCRVS = new List<List<Curve>>();
 
         public BSP()
           : base("Parcel-Partition Algorithm", "bsp",
@@ -40,10 +41,10 @@ namespace UFG
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddCurveParameter("lowest deviation solution", "output", "output-street grids on site", GH_ParamAccess.list);
-            pManager.AddCurveParameter("Text output debug", "debug", "test the algorithm", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Points for debugging", "debug", "debug points for the partitions", GH_ParamAccess.list);
-
+            pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
+            pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
+            pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -54,7 +55,7 @@ namespace UFG
             double stdDevDim = 0.5;
             double ratioAr = 0.75;
             double rot = 0.0;
-            int  showItr = 0;
+             int  showItr = 0;
             if (!DA.GetData(0, ref SiteCrv)) return;
             if (!DA.GetData(1, ref numParcels)) return;
             if (!DA.GetData(2, ref stdDevMeanAr)) return;
@@ -75,15 +76,19 @@ namespace UFG
 
             List<Curve> lowestDevCrv = new List<Curve>();
             double minScore = 100000.00;
+            int minIndex = 0;
+            string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
             for(int i=0; i<bspObjLi.Count; i++)
             {
                 double score = bspObjLi[i].GetScore();
                 if (score < minScore)
                 {
                     minScore = score;
-                    lowestDevCrv = bspObjLi[i].GetCrv(); ;
+                    lowestDevCrv = bspObjLi[i].GetCrv();
+                    minIndex = i;
                 }
             }
+            minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
             bspalg.GetBspResults();
 
             thisFCRVS = bspObjLi[showItr].GetCrv();
@@ -91,6 +96,7 @@ namespace UFG
             DA.SetDataList(0, lowestDevCrv);
             DA.SetDataList(1, thisFCRVS);
             DA.SetDataList(2, scoreLi);
+            DA.SetData(3, minIndexScore);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }
