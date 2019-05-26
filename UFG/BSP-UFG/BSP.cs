@@ -37,6 +37,8 @@ namespace UFG
             pManager.AddAngleParameter("angle-alignment (degrees 0, 360)", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
             // 6. show this iteration
             pManager.AddIntegerParameter("show-this-iterations", "this-itr", "showing the iteration to show - optimization", GH_ParamAccess.item);
+            // 7. reset values
+            pManager.AddBooleanParameter("reset-all-values", "reset-vals", "set everything to 0 and clear all values", GH_ParamAccess.item);
 
         }
 
@@ -58,6 +60,8 @@ namespace UFG
             double rot = 0.0;
             int showItr = 0;
 
+            bool reset = false;
+
             if (!DA.GetData(0, ref SiteCrv)) return;
             if (!DA.GetData(1, ref numParcels)) return;
             if (!DA.GetData(2, ref stdDevMeanAr)) return;
@@ -65,6 +69,23 @@ namespace UFG
             if (!DA.GetData(4, ref ratioAr)) return;
             if (!DA.GetData(5, ref rot)) return;
             if (!DA.GetData(6, ref showItr)) return;
+            if (!DA.GetData(7, ref reset)) return;
+
+            /// global variables to keep track of iterations
+            List<Curve> lowestDevCrv = new List<Curve>();
+            double minScore = 100000.00;
+            int minIndex = 0;
+            string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
+
+            if (reset == true)
+            {
+                scoreLi = new List<double>();
+                bspObjLi = new List<BspObj>();
+                lowestDevCrv = new List<Curve>();
+                minIndex = 0;
+                minIndexScore = "";
+                thisFCRVS = new List<Curve>();
+            }
 
             // int NumIters = scoreLi.Count;//(int)numItrs;
             double Rotation = Rhino.RhinoMath.ToRadians(rot);
@@ -76,10 +97,7 @@ namespace UFG
             bspObjLi.Add(mybspobj);
             scoreLi.Add(myscore);
 
-            List<Curve> lowestDevCrv = new List<Curve>();
-            double minScore = 100000.00;
-            int minIndex = 0;
-            string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
+
             for (int i = 0; i < bspObjLi.Count; i++)
             {
                 double score = bspObjLi[i].GetScore();
