@@ -9,6 +9,10 @@ namespace UFG
 {
     public class BSP : GH_Component
     {
+        List<double> scoreLi = new List<double>();
+        List<BspObj> bspObjLi = new List<BspObj>();
+        List<Curve> thisFCRVS = new List<Curve>();
+
         public BSP()
           : base("Parcel-Partition Algorithm", "bsp",
               "Street Grid Algorithm -1",
@@ -31,15 +35,15 @@ namespace UFG
             // 5. rotation 
             pManager.AddAngleParameter("angle-alignment (degrees 0, 360)", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
             // 6. number of iterations
-            pManager.AddNumberParameter("number-of-iterations", "max-itr", "number of iterations to check - optimization", GH_ParamAccess.item);
-
+            pManager.AddIntegerParameter("show-this-iterations", "this-itr", "showing the iteration to show - optimization", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddCurveParameter("input sites", "site", "street grids on site", GH_ParamAccess.list);
-            pManager.AddTextParameter("Text output debug", "debug", "test the algorithm", GH_ParamAccess.item);
-            pManager.AddPointParameter("Points for debugging", "debug", "debug points for the partitions", GH_ParamAccess.list);
+            pManager.AddCurveParameter("lowest deviation solution", "output", "output-street grids on site", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Text output debug", "debug", "test the algorithm", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Points for debugging", "debug", "debug points for the partitions", GH_ParamAccess.list);
+
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -50,35 +54,43 @@ namespace UFG
             double stdDevDim = 0.5;
             double ratioAr = 0.75;
             double rot = 0.0;
-            double  numItrs = 10;
+            int  showItr = 0;
             if (!DA.GetData(0, ref SiteCrv)) return;
             if (!DA.GetData(1, ref numParcels)) return;
             if (!DA.GetData(2, ref stdDevMeanAr)) return;
             if (!DA.GetData(3, ref stdDevDim)) return;
             if (!DA.GetData(4, ref ratioAr)) return;
             if (!DA.GetData(5, ref rot)) return;
-            if (!DA.GetData(6, ref numItrs)) return;
+            if (!DA.GetData(6, ref showItr)) return;
 
-            int NumIters = (int)numItrs;
+            int NumIters = scoreLi.Count;//(int)numItrs;
             double Rotation = Rhino.RhinoMath.ToRadians(rot);
 
             BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, stdDevMeanAr, stdDevDim, ratioAr, Rotation, NumIters);
             bspalg.RUN_BSP_ALG();
-            List<Curve> crvs = bspalg.GetBspResults();
-            DA.SetDataList(0, crvs);
+            BspObj obj = bspalg.GetBspObj();
+            bspObjLi.Add(obj);
+            scoreLi.Add(obj.GetScore());
 
-            string msg = bspalg.getMSG();
-            DA.SetData(1, msg);
 
-            var T = SiteCrv.GetBoundingBox(true);
-            Point3d A = T.Min;
-            Point3d C = T.Max;
-            Point3d a = new Point3d(A.X, A.Y, 0);
-            Point3d c = new Point3d(C.X, C.Y, 50);
-            Point3d b = new Point3d(c.X, a.Y, 100);
-            Point3d d = new Point3d(a.X, c.Y, 150);
-            Point3d[] pts = { a, b, c, d };
-            DA.SetDataList(2, pts);
+            List<Curve> lowestDevCrv = new List<Curve>();
+            double minScore = 100000.00;
+            for(int i=0; i<bspObjLi.Count; i++)
+            {
+                double score = bspObjLi[i].GetScore();
+                if (score < minScore)
+                {
+                    minScore = score;
+                    lowestDevCrv = bspObjLi[i].GetCrv(); ;
+                }
+            }
+            bspalg.GetBspResults();
+
+            thisFCRVS = bspObjLi[showItr].GetCrv();
+            
+            DA.SetDataList(0, lowestDevCrv);
+            DA.SetDataList(1, thisFCRVS);
+            DA.SetDataList(2, scoreLi);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }

@@ -21,17 +21,16 @@ namespace UFG
         Random rnd = new Random();
 
         // constraints from gui //
-        double MAX_DEV_MEAN_AREA = 0.5; // {0,1}
-        double MAX_DEV_RATIO_AREA = 0.5; // {0,1}
-        double MAX_DEV_DIM = 0.5; // {0,1}
-        int NUM_PARCELS = 3;
-        int MAX_ITERATION = 10;
-        double ROTATION = Math.PI/3; // {0, 2.PI}
+        double MAX_DEV_MEAN_AREA; // {0,1}
+        double MAX_DEV_RATIO_AREA; // {0,1}
+        double MAX_DEV_DIM; // {0,1}
+        int NUM_PARCELS;
+        int MAX_ITERATION;
+        double ROTATION; // {0, 2.PI}
         Point3d CEN;
 
         List<BspObj> bspObjs;
-
-        public BSPAlg() { }
+        BspObj myBspObj;
 
         public BSPAlg(Curve crv, int numParcels, double devMeanAr, double devDim, double ratioAr, double rot, int numItrs)
         {
@@ -69,16 +68,24 @@ namespace UFG
         public void RUN_BSP_ALG()
         {
             bspObjs =new List<BspObj>();
-            Curve[] arr = FCURVE.ToArray();
             FCURVE = new List<Curve>();
 
             //run the bsp algorithm
             Curve crv = SiteCrv.DuplicateCurve();
             recSplit(crv, 0);
-            bspObjs.Add(new BspObj(FCURVE, MAX_DEV_MEAN_AREA, MAX_DEV_DIM, MAX_DEV_RATIO_AREA, redoCounter));
 
             // RECURSIVELY optimize the parcel generation strategy
+            /*
+            
+            // multiple iterations     
+            bspObjs.Add(new BspObj(FCURVE, 
+                MAX_DEV_MEAN_AREA, 
+                MAX_DEV_DIM, 
+                MAX_DEV_RATIO_AREA, 
+                redoCounter));
+
             redoCounter++;
+
             if (redoCounter < MAX_ITERATION) { RUN_BSP_ALG(); }
             else
             {
@@ -89,6 +96,25 @@ namespace UFG
                     FCURVE[i].Transform(xform2);
                 }
             }
+            */
+
+
+            // single itreration
+
+            // single bsp Object
+            myBspObj = new BspObj(FCURVE, MAX_DEV_MEAN_AREA, MAX_DEV_DIM, MAX_DEV_RATIO_AREA, redoCounter);
+            //single transformation
+            var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
+            SiteCrv.Transform(xform2);
+            for (int i = 0; i < FCURVE.Count; i++)
+            {
+                FCURVE[i].Transform(xform2);
+            }
+        }
+
+        public BspObj GetBspObj()
+        {
+            return myBspObj;
         }
 
         public List<Curve> GetBspResults() { return FCURVE; }
