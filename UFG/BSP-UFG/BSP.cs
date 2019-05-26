@@ -20,14 +20,19 @@ namespace UFG
         {
             // 0. input curves
             pManager.AddCurveParameter("input-site", "site", "street grids on site", GH_ParamAccess.item);
-            // 1. standard deviation to restrict area of individual partition & boundary
-            pManager.AddNumberParameter("std-dev-area", "std-dev Area", "standard deviation in AREA to restict parcels", GH_ParamAccess.item);
-            // 2. standard deviation to restrict dimension of sides 
-            pManager.AddNumberParameter("std-dev-dim", "std-dev Dimension", "standard deviation in DIMENSION to restrict parcels", GH_ParamAccess.item);
-            // 3. min ratio of actual curve and boundary
-            pManager.AddNumberParameter("ratio-crv-boundary", "ratio-crv-boundary", "ratio of actual parcel AREA vs convex hull to restrict parcels", GH_ParamAccess.item);
-            // 4. rotation 
-            pManager.AddAngleParameter("angle-alignment", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
+            // 1. Number of Parcels 
+            pManager.AddIntegerParameter("number-parcels", "num-of-parcels ", "The number of parcels required", GH_ParamAccess.item);
+            // 2. standard deviation to restrict area of individual partition & boundary
+            pManager.AddNumberParameter("dev-mean_area (0,1)", "std-dev Area", "standard deviation in AREA to restict parcels", GH_ParamAccess.item);
+            // 3. standard deviation to restrict dimension of sides 
+            pManager.AddNumberParameter("dev-dim (0,1)", "std-dev Dimension", "standard deviation in DIMENSION to restrict parcels", GH_ParamAccess.item);
+            // 4. min ratio of actual curve and boundary
+            pManager.AddNumberParameter("ratio-ar-boundary (0,1)", "ratio-crv-boundary", "ratio of actual parcel AREA vs convex hull to restrict parcels", GH_ParamAccess.item);
+            // 5. rotation 
+            pManager.AddAngleParameter("angle-alignment (degrees 0, 360)", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
+            // 6. number of iterations
+            pManager.AddNumberParameter("number-of-iterations", "max-itr", "number of iterations to check - optimization", GH_ParamAccess.item);
+
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -40,9 +45,24 @@ namespace UFG
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Curve SiteCrv = null;
-            if(!DA.GetData(0, ref SiteCrv)) return;
+            int numParcels = 4;
+            double stdDevMeanAr = 0.25;
+            double stdDevDim = 0.5;
+            double ratioAr = 0.75;
+            double rot = 0.0;
+            double  numItrs = 10;
+            if (!DA.GetData(0, ref SiteCrv)) return;
+            if (!DA.GetData(1, ref numParcels)) return;
+            if (!DA.GetData(2, ref stdDevMeanAr)) return;
+            if (!DA.GetData(3, ref stdDevDim)) return;
+            if (!DA.GetData(4, ref ratioAr)) return;
+            if (!DA.GetData(5, ref rot)) return;
+            if (!DA.GetData(6, ref numItrs)) return;
 
-            BSPAlg bspalg = new BSPAlg(SiteCrv);
+            int NumIters = (int)numItrs;
+            double Rotation = Rhino.RhinoMath.ToRadians(rot);
+
+            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, stdDevMeanAr, stdDevDim, ratioAr, Rotation, NumIters);
             bspalg.RUN_BSP_ALG();
             List<Curve> crvs = bspalg.GetBspResults();
             DA.SetDataList(0, crvs);
