@@ -35,8 +35,9 @@ namespace UFG
             pManager.AddNumberParameter("ratio-ar-boundary (0,1)", "ratio-crv-boundary", "ratio of actual parcel AREA vs convex hull to restrict parcels", GH_ParamAccess.item);
             // 5. rotation 
             pManager.AddAngleParameter("angle-alignment (degrees 0, 360)", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
-            // 6. number of iterations
+            // 6. show this iteration
             pManager.AddIntegerParameter("show-this-iterations", "this-itr", "showing the iteration to show - optimization", GH_ParamAccess.item);
+
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -55,7 +56,8 @@ namespace UFG
             double stdDevDim = 0.5;
             double ratioAr = 0.75;
             double rot = 0.0;
-             int  showItr = 0;
+            int showItr = 0;
+
             if (!DA.GetData(0, ref SiteCrv)) return;
             if (!DA.GetData(1, ref numParcels)) return;
             if (!DA.GetData(2, ref stdDevMeanAr)) return;
@@ -64,41 +66,39 @@ namespace UFG
             if (!DA.GetData(5, ref rot)) return;
             if (!DA.GetData(6, ref showItr)) return;
 
-            int NumIters = scoreLi.Count;//(int)numItrs;
+            // int NumIters = scoreLi.Count;//(int)numItrs;
             double Rotation = Rhino.RhinoMath.ToRadians(rot);
 
-            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, stdDevMeanAr, stdDevDim, ratioAr, Rotation, NumIters);
+            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, stdDevMeanAr, stdDevDim, ratioAr, Rotation);
             bspalg.RUN_BSP_ALG();
-            BspObj obj = bspalg.GetBspObj();
-            bspObjLi.Add(obj);
-            scoreLi.Add(obj.GetScore());
-
+            BspObj mybspobj = bspalg.GetBspObj();
+            double myscore = mybspobj.GetScore();
+            bspObjLi.Add(mybspobj);
+            scoreLi.Add(myscore);
 
             List<Curve> lowestDevCrv = new List<Curve>();
             double minScore = 100000.00;
             int minIndex = 0;
             string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
-            for(int i=0; i<bspObjLi.Count; i++)
+            for (int i = 0; i < bspObjLi.Count; i++)
             {
                 double score = bspObjLi[i].GetScore();
                 if (score < minScore)
                 {
                     minScore = score;
-                    lowestDevCrv = bspObjLi[i].GetCrv();
+                    lowestDevCrv = bspObjLi[i].GetCrvs();
                     minIndex = i;
                 }
             }
             minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
-            bspalg.GetBspResults();
 
-            thisFCRVS = bspObjLi[showItr].GetCrv();
-            
+            thisFCRVS = bspObjLi[showItr].GetCrvs();
+
             DA.SetDataList(0, lowestDevCrv);
             DA.SetDataList(1, thisFCRVS);
             DA.SetDataList(2, scoreLi);
             DA.SetData(3, minIndexScore);
         }
-
         protected override System.Drawing.Bitmap Icon { get { return null; } }
 
         public override Guid ComponentGuid { get { return new Guid("3c14e4dd-7f66-4bc8-95d6-e53593d4ae10"); } }

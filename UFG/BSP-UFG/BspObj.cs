@@ -27,7 +27,7 @@ namespace UFG
             redoCounter = redo;
         }
 
-        public List<Curve> GetCrv() { return FCURVE; }
+        public List<Curve> GetCrvs() { return FCURVE; }
 
         public double GetDevMeanAr() 
         {
