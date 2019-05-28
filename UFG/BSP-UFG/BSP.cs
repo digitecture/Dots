@@ -10,6 +10,7 @@ namespace UFG
     public class BSP : GH_Component
     {
         List<double> scoreLi = new List<double>();
+        List<string> scoreLiMsg = new List<string>();
         List<BspObj> bspObjLi = new List<BspObj>();
         List<Curve> thisFCRVS = new List<Curve>();
         List<List<Curve>> allFCRVS = new List<List<Curve>>();
@@ -28,16 +29,12 @@ namespace UFG
             // 1. Number of Parcels 
             pManager.AddIntegerParameter("number-parcels", "num-of-parcels ", "The number of parcels required", GH_ParamAccess.item);
             // 2. standard deviation to restrict area of individual partition & boundary
-            pManager.AddNumberParameter("dev-mean_area (0,1)", "std-dev Area", "standard deviation in AREA to restict parcels", GH_ParamAccess.item);
-            // 3. standard deviation to restrict dimension of sides 
-            pManager.AddNumberParameter("dev-dim (0,1)", "std-dev Dimension", "standard deviation in DIMENSION to restrict parcels", GH_ParamAccess.item);
-            // 4. min ratio of actual curve and boundary
-            pManager.AddNumberParameter("ratio-ar-boundary (0,1)", "ratio-crv-boundary", "ratio of actual parcel AREA vs convex hull to restrict parcels", GH_ParamAccess.item);
-            // 5. rotation 
+            pManager.AddNumberParameter("dev-dim (0,1)", "dev-mean-(0,1)", "standard deviation in DIMENSION to restrict parcels", GH_ParamAccess.item);
+            // 3. rotation 
             pManager.AddAngleParameter("angle-alignment (degrees 0, 360)", "angle-alignment", "rotate the entire parcel generation", GH_ParamAccess.item);
-            // 6. show this iteration
+            // 4. show this iteration
             pManager.AddIntegerParameter("show-this-iterations", "this-itr", "showing the iteration to show - optimization", GH_ParamAccess.item);
-            // 7. reset values
+            // 5. reset values
             pManager.AddBooleanParameter("reset-all-values", "reset-vals", "set everything to 0 and clear all values", GH_ParamAccess.item);
 
         }
@@ -46,7 +43,7 @@ namespace UFG
         {
             pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
             pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
-            pManager.AddNumberParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
+            pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
             pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
         }
 
@@ -54,69 +51,77 @@ namespace UFG
         {
             Curve SiteCrv = null;
             int numParcels = 4;
-            double stdDevMeanAr = 0.25;
-            double stdDevDim = 0.5;
-            double ratioAr = 0.75;
+            double devMean = 0.25;
             double rot = 0.0;
             int showItr = 0;
-
             bool reset = false;
 
             if (!DA.GetData(0, ref SiteCrv)) return;
             if (!DA.GetData(1, ref numParcels)) return;
-            if (!DA.GetData(2, ref stdDevMeanAr)) return;
-            if (!DA.GetData(3, ref stdDevDim)) return;
-            if (!DA.GetData(4, ref ratioAr)) return;
-            if (!DA.GetData(5, ref rot)) return;
-            if (!DA.GetData(6, ref showItr)) return;
-            if (!DA.GetData(7, ref reset)) return;
+            if (!DA.GetData(2, ref devMean)) return;
+            if (!DA.GetData(3, ref rot)) return;
+            if (!DA.GetData(4, ref showItr)) return;
+            if (!DA.GetData(5, ref reset)) return;
 
             /// global variables to keep track of iterations
             List<Curve> lowestDevCrv = new List<Curve>();
             double minScore = 100000.00;
             int minIndex = 0;
+            double score = 0;
             string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
 
             if (reset == true)
             {
                 scoreLi = new List<double>();
+                scoreLiMsg = new List<string>();
                 bspObjLi = new List<BspObj>();
                 lowestDevCrv = new List<Curve>();
                 minIndex = 0;
+                score = 0;
                 minIndexScore = "";
                 thisFCRVS = new List<Curve>();
             }
 
-            // int NumIters = scoreLi.Count;//(int)numItrs;
+            // int NumIters = scoreLi.Count;  //(int)numItrs;
             double Rotation = Rhino.RhinoMath.ToRadians(rot);
 
-            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, stdDevMeanAr, stdDevDim, ratioAr, Rotation);
+            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, devMean, Rotation);
             bspalg.RUN_BSP_ALG();
             BspObj mybspobj = bspalg.GetBspObj();
-            double myscore = mybspobj.GetScore();
+            score= mybspobj.GetScore();
+            string myscoreMsg = mybspobj.GetMsg();
             bspObjLi.Add(mybspobj);
-            scoreLi.Add(myscore);
-
+            scoreLiMsg.Add(myscoreMsg);
 
             for (int i = 0; i < bspObjLi.Count; i++)
             {
-                double score = bspObjLi[i].GetScore();
-                if (score < minScore)
+                double score2 = bspObjLi[i].GetScore();
+                if (score2 < minScore)
                 {
-                    minScore = score;
-                    lowestDevCrv = bspObjLi[i].GetCrvs();
+                    minScore = score2;
                     minIndex = i;
                 }
             }
+
             minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
 
             thisFCRVS = bspObjLi[showItr].GetCrvs();
+            lowestDevCrv = bspObjLi[minIndex].GetCrvs();
 
-            DA.SetDataList(0, lowestDevCrv);
-            DA.SetDataList(1, thisFCRVS);
-            DA.SetDataList(2, scoreLi);
-            DA.SetData(3, minIndexScore);
+            try { DA.SetDataList(0, lowestDevCrv); }
+            catch (Exception) { }
+
+            try { DA.SetDataList(1, thisFCRVS); }
+            catch (Exception) { }
+
+            try { DA.SetDataList(2, scoreLiMsg); }
+            catch (Exception) { }
+
+            try { DA.SetData(3, minIndexScore); }
+            catch (Exception) { }
+
         }
+
         protected override System.Drawing.Bitmap Icon { get { return null; } }
 
         public override Guid ComponentGuid { get { return new Guid("3c14e4dd-7f66-4bc8-95d6-e53593d4ae10"); } }

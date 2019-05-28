@@ -21,22 +21,20 @@ namespace UFG
         Random rnd = new Random();
 
         // constraints from gui //
-        double MAX_DEV_MEAN_AREA; // {0,1}
-        double MAX_DEV_RATIO_AREA; // {0,1}
-        double MAX_DEV_DIM; // {0,1}
+        double MAX_DEV_MEAN; // {0,1}
         int NUM_PARCELS;
+        int NUM_PARCELS_REQ;
         double ROTATION; // {0, 2.PI}
         Point3d CEN;
 
         BspObj myBspObj;
 
-        public BSPAlg(Curve crv, int numParcels, double devMeanAr, double devDim, double ratioAr, double rot)
+        public BSPAlg(Curve crv, int numParcels, double devMean, double rot)
         {
             SiteCrv = crv;
-            NUM_PARCELS = (int)(Math.Log(numParcels) / Math.Log(2.0));
-            MAX_DEV_MEAN_AREA = devMeanAr;
-            MAX_DEV_DIM = devDim;
-            MAX_DEV_RATIO_AREA = ratioAr;
+            NUM_PARCELS = (int)((Math.Log(numParcels) / Math.Log(2.0))+1);
+            NUM_PARCELS_REQ = numParcels;
+            MAX_DEV_MEAN = devMean;
             ROTATION = rot;
 
             CEN = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid;
@@ -69,7 +67,7 @@ namespace UFG
             recSplit(crv, 0);
 
             // new bsp object
-            myBspObj = new BspObj(FCURVE, MAX_DEV_MEAN_AREA, MAX_DEV_DIM, MAX_DEV_RATIO_AREA, redoCounter);
+            myBspObj = new BspObj(FCURVE, NUM_PARCELS_REQ);
 
             var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
             SiteCrv.Transform(xform2);
@@ -82,36 +80,6 @@ namespace UFG
         public BspObj GetBspObj() { return myBspObj; }
 
         public List<Curve> GetBspResults() { return FCURVE; }
-
-        public List<Curve> getIntxCrv(Curve crv)
-        {
-            //only take the part of a curve inside the site region
-            List<Curve> retCrv=new List<Curve>();
-            Curve[] intxCrv = Curve.CreateBooleanIntersection(SiteCrv, crv);
-            if (intxCrv.Length > 0)
-            {
-                Curve maxCrv = intxCrv[0];
-                double maxAr = 0.0;
-                for (int i = 0; i < intxCrv.Length; i++)
-                {
-                    double ar = Rhino.Geometry.AreaMassProperties.Compute(intxCrv[i]).Area;
-                    if (ar > maxAr)
-                    {
-                        maxAr = ar;
-                        maxCrv = intxCrv[i];
-                    }
-                }
-                for(int i=0; i<intxCrv.Length; i++)
-                {
-                    if(intxCrv[i]!= null)
-                    {
-                        retCrv.Add(intxCrv[i]);
-                    }                    
-                }                
-               // return maxCrv;
-            }
-            return retCrv;
-        }
 
         public void recSplit(Curve crv, int counter)
         {
@@ -133,45 +101,34 @@ namespace UFG
             if (horDi > verDi) { MSG += ".H"; polyPts = verSplit(iniPts); }
             else { MSG += ".V"; polyPts = horSplit(iniPts); }
 
-            // returned = 2 bounding box: find the portion of curve it intersects with
+            // 2 bounding box of the input curve from recursive split function
             PolylineCurve crv1 = new PolylineCurve(polyPts[0]);
             PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
-            List<Curve> crvs1= getIntxCrv(crv1);
-            List<Curve> crvs2 = getIntxCrv(crv2);
+
+            // get intersection with main site crv
+            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1); 
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2); 
+
             counter++;
             if (counter < NUM_PARCELS) // from GUI ; file: BSP
             {
-                for(int i=0; i<crvs1.Count; i++)
+                try
                 {
-                    if (crvs1[i] != null)
-                    {
-                        recSplit(crvs1[i], counter);
-                    }
+                    if (crvs1.Length > 0) { for (int i = 0; i < crvs1.Length; i++) { recSplit(crvs1[i], counter); } }
                 }
-                for (int i = 0; i < crvs2.Count; i++)
+                catch (Exception) { }
+
+                try
                 {
-                    if (crvs2[i] != null)
-                    {
-                        recSplit(crvs2[i], counter);
-                    }
+                    if (crvs2.Length > 0) { for (int i = 0; i < crvs2.Length; i++) { recSplit(crvs2[i], counter); } }
                 }
+                catch (Exception) { }
+
             }
             else
             {
-                for (int i = 0; i < crvs1.Count; i++)
-                {
-                    if (crvs1[i] != null)
-                    {
-                        FCURVE.Add(crvs1[i]);
-                    }
-                }
-                for (int i = 0; i < crvs2.Count; i++)
-                {
-                    if (crvs2[i] != null)
-                    {
-                        FCURVE.Add(crvs2[i]);
-                    }
-                }
+                for (int i = 0; i < crvs1.Length; i++) { FCURVE.Add(crvs1[i]); }
+                for (int i = 0; i < crvs2.Length; i++) { FCURVE.Add(crvs2[i]); }
             }
         }
 
@@ -183,15 +140,16 @@ namespace UFG
             Point3d c = T[2];
             Point3d d = T[3];
 
-            double t = rnd.NextDouble();
+            int t0 = 1;
+            double T0 = rnd.NextDouble();
+            if (T0 > 0.5) { t0 = -1; }
+
+            double t = 0.5 + rnd.NextDouble() * MAX_DEV_MEAN * t0;
             Point3d e = new Point3d(a.X + (b.X - a.X) * t, a.Y, 0);
             Point3d f = new Point3d(d.X + (c.X - d.X) * t, d.Y, 0);
 
             Point3d[] le = { a, e, f, d, a };
             Point3d[] ri = { e, b, c, f, e };
-
-            //Line line = new Line(e, f);
-            //partitionLines.Add(line);
 
             List<Point3d[]> pts = new List<Point3d[]> { le, ri };
             return pts;
@@ -205,19 +163,19 @@ namespace UFG
             Point3d c = T[2];
             Point3d d = T[3];
 
-            double t = rnd.NextDouble();
+            int t0 = 1;
+            double T0 = rnd.NextDouble();
+            if (T0 > 0.5) { t0 = -1; }
+
+            double t = 0.5 + rnd.NextDouble() * MAX_DEV_MEAN * t0;
             Point3d e = new Point3d(a.X, a.Y + (d.Y - a.Y) * t, 0);
             Point3d f = new Point3d(b.X, e.Y, 0);
 
             Point3d[] up = { a, b, f, e, a };
             Point3d[] dn = { e, f, c, d, e };
 
-            //Line line = new Line(e, f);
-            //partitionLines.Add(line);
-
             List<Point3d[]> pts = new List<Point3d[]> { up, dn };
             return pts;
         }
-
     }
 }

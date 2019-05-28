@@ -8,23 +8,15 @@ namespace UFG
     public class BspObj
     {
         List<Curve> FCURVE;
-
-        double MAX_DEV_MEAN_AREA; // {0,1}
-        double MAX_DEV_RATIO_AREA; // {0,1}
-        double MAX_DEV_DIM; // {0,1}
-
         string MSG = "";
-        int redoCounter = 0;
+        int NUM_PARCELS_REQ;
 
         public BspObj() { }
 
-        public BspObj(List<Curve> crvs, double devMeanAr, double devDim, double devRatioAr, int redo)
-        {
+        public BspObj(List<Curve> crvs, int num_parcels_req) 
+        { 
             FCURVE = crvs;
-            MAX_DEV_MEAN_AREA = devMeanAr;
-            MAX_DEV_RATIO_AREA = devRatioAr;
-            MAX_DEV_DIM = devDim;
-            redoCounter = redo;
+            NUM_PARCELS_REQ = num_parcels_req;
         }
 
         public List<Curve> GetCrvs() { return FCURVE; }
@@ -79,10 +71,15 @@ namespace UFG
             // MAX_DEV_MEAN_AREA : mean of all parcels / ar of each parcel 
             // MAX_DEV_RATIO_AREA : bounding box area to curve area
             // MAX_DEV_DIM : hor dim / ver dim || vice-versa
-            double DEV_MEAN_AR = GetDevMeanAr();
-            double DEV_AR_RATIO = GetDevArRatio();
-            double SCORE = (DEV_MEAN_AR + DEV_AR_RATIO) / 2;
+            double DEV_MEAN_AR = Math.Round(GetDevMeanAr(), 2);
+            double DEV_AR_RATIO = Math.Round(GetDevArRatio(), 2);
+            double score = (DEV_MEAN_AR + DEV_AR_RATIO) / 2;
+            double SCORE = Math.Round(score, 2);
+            MSG = FCURVE.Count + "/" +NUM_PARCELS_REQ+ ", dev_ar_mean: " +DEV_MEAN_AR.ToString() + "x" + DEV_AR_RATIO.ToString() + " = " + SCORE;
             return SCORE;
         }
+
+        public string GetMsg() { return MSG; }
+
     }
 }
