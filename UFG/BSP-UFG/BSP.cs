@@ -105,20 +105,17 @@ namespace UFG
 
             minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
 
-            thisFCRVS = bspObjLi[showItr].GetCrvs();
-            lowestDevCrv = bspObjLi[minIndex].GetCrvs();
+            try { thisFCRVS = bspObjLi[showItr].GetCrvs(); } catch(Exception) { }
 
-            try { DA.SetDataList(0, lowestDevCrv); }
-            catch (Exception) { }
+            try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch(Exception) { }
 
-            try { DA.SetDataList(1, thisFCRVS); }
-            catch (Exception) { }
+            try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
 
-            try { DA.SetDataList(2, scoreLiMsg); }
-            catch (Exception) { }
+            try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
 
-            try { DA.SetData(3, minIndexScore); }
-            catch (Exception) { }
+            try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
+
+            try { DA.SetData(3, minIndexScore); } catch (Exception) { }
 
         }
 
