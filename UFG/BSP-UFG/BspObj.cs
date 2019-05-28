@@ -57,10 +57,8 @@ namespace UFG
                 double v = b.DistanceTo(c);
                 double ar_B = u * v;
                 double ratio = ar_crv / ar_B;
-                if (ratio < min_ratio)
-                {
-                    min_ratio = ratio;
-                }
+                // domain : 0 < ratio < 1
+                if (ratio < min_ratio) {  min_ratio = ratio; }
             }
             return min_ratio; 
         }

@@ -69,12 +69,10 @@ namespace UFG
             // new bsp object
             myBspObj = new BspObj(FCURVE, NUM_PARCELS_REQ);
 
+            // transform all the curves
             var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
             SiteCrv.Transform(xform2);
-            for(int i=0; i<FCURVE.Count; i++)
-            {
-                FCURVE[i].Transform(xform2);
-            }
+            for(int i=0; i<FCURVE.Count; i++) { FCURVE[i].Transform(xform2); }
         }
 
         public BspObj GetBspObj() { return myBspObj; }

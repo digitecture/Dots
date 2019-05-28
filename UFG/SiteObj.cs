@@ -49,9 +49,13 @@ namespace UFG
                 Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance,
                 CurveOffsetCornerStyle.Sharp
             );
-            double ar = AreaMassProperties.Compute(offsetCrv[0]).Area;
-            HEIGHT = GFA / ar;
-            SOLID = Extrusion.Create(offsetCrv[0], -HEIGHT, true);
+            try
+            {
+                double ar = AreaMassProperties.Compute(offsetCrv[0]).Area;
+                HEIGHT = GFA / ar;
+                SOLID = Extrusion.Create(offsetCrv[0], -HEIGHT, true);
+            }
+            catch (Exception) { }
             return SOLID;
         }
 
