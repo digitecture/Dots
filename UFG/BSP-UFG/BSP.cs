@@ -50,9 +50,9 @@ namespace UFG
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Curve SiteCrv = null;
-            int numParcels = 4;
-            double devMean = 0.25;
-            double rot = 0.0;
+            int numParcels=0;
+            double devMean = double.NaN;
+            double rot = double.NaN;
             int showItr = 0;
             bool reset = false;
 
@@ -102,8 +102,8 @@ namespace UFG
                     minIndex = i;
                 }
             }
-
-            minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
+            minIndexScore = bspalg.getMSG() + "\n\n\n";
+            minIndexScore += minIndex.ToString() + ": " + minScore.ToString();
 
             try { thisFCRVS = bspObjLi[showItr].GetCrvs(); } catch(Exception) { }
 

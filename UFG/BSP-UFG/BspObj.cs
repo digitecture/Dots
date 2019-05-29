@@ -79,5 +79,63 @@ namespace UFG
 
         public string GetMsg() { return MSG; }
 
+
+
+        //  waste //
+
+        /*
+        public void recSplit(Curve crv, int counter)
+        {
+            // start with curve, get bounding box
+            // compare hor - ver. ratio : send to hor - ver split -> returns 2 bounding box
+            // find the region within each box inside the site -> result
+            var T = crv.GetBoundingBox(true);
+            Point3d a = T.Min;
+            Point3d c = T.Max;
+            Point3d b = new Point3d(c.X, a.Y, 0);
+            Point3d d = new Point3d(a.X, c.Y, 0);
+            double horDi = a.DistanceTo(b);
+            double verDi = a.DistanceTo(d);
+
+            List<Point3d[]> polyPts = new List<Point3d[]>(); //persistent data
+
+            Point3d[] iniPts = { a, b, c, d, a };
+
+            if (horDi > verDi) { polyPts = verSplit(iniPts); }
+            else { polyPts = horSplit(iniPts); }
+
+            // 2 bounding box of the input curve from recursive split function
+            PolylineCurve crv1 = new PolylineCurve(polyPts[0]);
+            PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
+
+            // get intersection with main site crv
+            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
+
+            int num_crvs_got = FCURVE.Count + crvs1.Length + crvs2.Length;
+            MSG += counter.ToString() + ">" + NUM_PARCELS_REQ.ToString() + "," + NUM_PARCELS.ToString() + "\n";
+
+            if (counter < NUM_PARCELS_REQ) // from GUI ; file: BSP
+            {
+                try
+                {
+                    if (crvs1.Length > 0) { for (int i = 0; i < crvs1.Length; i++) { counter++; recSplit(crvs1[i], counter); } }
+                }
+                catch (Exception) { }
+
+                try
+                {
+                    if (crvs2.Length > 0) { for (int i = 0; i < crvs2.Length; i++) { counter++; recSplit(crvs2[i], counter); } }
+                }
+                catch (Exception) { }
+            }
+
+            else
+            {
+                for (int i = 0; i < crvs1.Length; i++) { FCURVE.Add(crvs1[i]); }
+                for (int i = 0; i < crvs2.Length; i++) { FCURVE.Add(crvs2[i]); }
+            }
+        }
+        */
     }
 }

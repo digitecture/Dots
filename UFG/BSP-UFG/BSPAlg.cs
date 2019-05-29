@@ -13,17 +13,18 @@ namespace UFG
     class BSPAlg
     {
         string MSG = "";
+        List<Curve> BspTreeCrvs = new List<Curve>();
         List<Curve> FCURVE = new List<Curve>();
         List<Line> partitionLines = new List<Line>();
         Curve SiteCrv;
-        int redoCounter = 0;
+
 
         Random rnd = new Random();
 
         // constraints from gui //
         double MAX_DEV_MEAN; // {0,1}
         int NUM_PARCELS;
-        int NUM_PARCELS_REQ;
+        int NUM_PARCELS_REQ=0;
         double ROTATION; // {0, 2.PI}
         Point3d CEN;
 
@@ -60,11 +61,13 @@ namespace UFG
 
         public void RUN_BSP_ALG()
         {
-            FCURVE = new List<Curve>();
-
+           
             //run the bsp algorithm
             Curve crv = SiteCrv.DuplicateCurve();
-            recSplit(crv, 0);
+            FCURVE = new List<Curve>();
+            BspTreeCrvs= new List<Curve>();
+            BspTreeCrvs.Add(crv);
+            recSplit(0);
 
             // new bsp object
             myBspObj = new BspObj(FCURVE, NUM_PARCELS_REQ);
@@ -79,25 +82,43 @@ namespace UFG
 
         public List<Curve> GetBspResults() { return FCURVE; }
 
-        public void recSplit(Curve crv, int counter)
+        public void recSplit(int recCounter)
         {
-            // start with curve, get bounding box
-            // compare hor - ver. ratio : send to hor - ver split -> returns 2 bounding box
-            // find the region within each box inside the site -> result
+            MSG += "\nrecursion Counter=" 
+                + recCounter.ToString()
+                +";  crvs in stack: "
+                +BspTreeCrvs.Count.ToString();
+
+            Curve inicrv = BspTreeCrvs[recCounter];
+            int N = NUM_PARCELS_REQ;
+            int n = BspTreeCrvs.Count - recCounter;
+            if (n < N)
+            {
+                recCounter++;
+                sendForRecursiveSplit(inicrv, recCounter);
+            }
+            else
+            {
+                for(int i=recCounter; i<BspTreeCrvs.Count; i++)
+                {
+                    MSG += "\naccepted crv index: " + i.ToString();
+                    Curve crv = BspTreeCrvs[i];
+                    FCURVE.Add(crv);
+                }
+            }
+        }
+
+        public void sendForRecursiveSplit(Curve crv, int rec_counter) { 
             var T = crv.GetBoundingBox(true);
-            Point3d a = T.Min;
-            Point3d c = T.Max;
-            Point3d b = new Point3d(c.X, a.Y, 0);
-            Point3d d = new Point3d(a.X, c.Y, 0);
-            double horDi = a.DistanceTo(b);
-            double verDi = a.DistanceTo(d);
+            Point3d a = T.Min; Point3d c = T.Max;
+            Point3d b = new Point3d(c.X, a.Y, 0); Point3d d = new Point3d(a.X, c.Y, 0);
+            double horDi = a.DistanceTo(b); double verDi = a.DistanceTo(d);
+            Point3d[] iniPts = { a, b, c, d, a };
 
             List<Point3d[]> polyPts = new List<Point3d[]>(); //persistent data
 
-            Point3d[] iniPts = { a, b, c, d, a };
-
-            if (horDi > verDi) { MSG += ".H"; polyPts = verSplit(iniPts); }
-            else { MSG += ".V"; polyPts = horSplit(iniPts); }
+            if (horDi > verDi) { polyPts = verSplit(iniPts); }
+            else { polyPts = horSplit(iniPts); }
 
             // 2 bounding box of the input curve from recursive split function
             PolylineCurve crv1 = new PolylineCurve(polyPts[0]);
@@ -105,30 +126,21 @@ namespace UFG
 
             // get intersection with main site crv
             Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1); 
-            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2); 
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
 
-            counter++;
-            if (counter < NUM_PARCELS) // from GUI ; file: BSP
-            {
-                try
-                {
-                    if (crvs1.Length > 0) { for (int i = 0; i < crvs1.Length; i++) { recSplit(crvs1[i], counter); } }
-                }
-                catch (Exception) { }
 
-                try
-                {
-                    if (crvs2.Length > 0) { for (int i = 0; i < crvs2.Length; i++) { recSplit(crvs2[i], counter); } }
-                }
-                catch (Exception) { }
-
+            if (crvs1.Length > 0) {
+                for (int i = 0; i < crvs1.Length; i++) { BspTreeCrvs.Add(crvs1[i]); }
             }
-            else
-            {
-                for (int i = 0; i < crvs1.Length; i++) { FCURVE.Add(crvs1[i]); }
-                for (int i = 0; i < crvs2.Length; i++) { FCURVE.Add(crvs2[i]); }
+
+            if (crvs2.Length > 0) {
+                for (int i = 0; i < crvs2.Length; i++) { BspTreeCrvs.Add(crvs2[i]); }
             }
-        }
+
+            recSplit(rec_counter);
+        }   // end method
+
+
 
         public List<Point3d[]> verSplit(Point3d[] T)
         {
@@ -152,6 +164,8 @@ namespace UFG
             List<Point3d[]> pts = new List<Point3d[]> { le, ri };
             return pts;
         }
+
+
 
         public List<Point3d[]> horSplit(Point3d[] T)
         {
