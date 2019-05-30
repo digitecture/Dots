@@ -4,7 +4,7 @@ import random
 def genHalfPlanes(crv, int_crv):
     B=rs.BoundingBox(crv)
     polyBB=rs.AddPolyline([B[0],B[1],B[2],B[3],B[0]])
-    diagB=rs.Distance(B[0],B[2])
+    diagB=5*rs.Distance(B[0],B[2])
     rays=[]
     sitePts=rs.CurvePoints(int_crv)
     for i in range(len(sitePts)-1):
@@ -12,7 +12,7 @@ def genHalfPlanes(crv, int_crv):
         b=sitePts[i+1]
         m=[(a[0]+b[0])/2,(a[1]+b[1])/2,0]
         a_=[m[0]+(a[0]-m[0])*diagB/(rs.Distance(a,m)), m[1]+(a[1]-m[1])*diagB/(rs.Distance(a,m)), 0]
-        b_=[m[0]+(b[0]-m[0])*diagB/(rs.Distance(a,m)), m[1]+(b[1]-m[1])*diagB/(rs.Distance(a,m)), 0]
+        b_=[m[0]+(b[0]-m[0])*diagB/(rs.Distance(b,m)), m[1]+(b[1]-m[1])*diagB/(rs.Distance(b,m)), 0]
         line_ma=rs.AddLine(m,a_)
         line_mb=rs.AddLine(m,b_)
         p=rs.CurveCurveIntersection(polyBB,line_ma)
@@ -22,7 +22,7 @@ def genHalfPlanes(crv, int_crv):
         rs.DeleteObject(line_ma)
         rs.DeleteObject(line_mb)
         rays.append([p_,q_])
-        #rs.AddLine(p_,q_)
+        rs.AddLine(p_,q_)
     rs.DeleteObject(polyBB)
     return rays
 
