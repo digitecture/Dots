@@ -15,15 +15,17 @@ namespace UFG
         string MSG = "";
         List<Curve> BspTreeCrvs = new List<Curve>();
         List<Curve> FCURVE = new List<Curve>();
+        List<Curve> ExtractFCrvs = new List<Curve>();
         List<Line> partitionLines = new List<Line>();
         Curve SiteCrv;
+        List<Curve> IntCrv;
 
 
         Random rnd = new Random();
 
         // constraints from gui //
         double MAX_DEV_MEAN; // {0,1}
-        int NUM_PARCELS;
+        int NUM_PARCELS=0;
         int NUM_PARCELS_REQ=0;
         double ROTATION; // {0, 2.PI}
         Point3d CEN;
@@ -33,6 +35,21 @@ namespace UFG
         public BspUfgAlg(Curve crv, int numParcels, double devMean, double rot)
         {
             SiteCrv = crv;
+            NUM_PARCELS = (int)((Math.Log(numParcels) / Math.Log(2.0)) + 1);
+            NUM_PARCELS_REQ = numParcels;
+            MAX_DEV_MEAN = devMean;
+            ROTATION = rot;
+
+            IntCrv = new List<Curve>();
+            CEN = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid;
+            var xform = Rhino.Geometry.Transform.Rotation(ROTATION, CEN);
+            SiteCrv.Transform(xform);
+        }
+
+        public BspUfgAlg(Curve crv, List<Curve> intcrv, int numParcels, double devMean, double rot)
+        {
+            SiteCrv = crv;
+            IntCrv = intcrv;
             NUM_PARCELS = (int)((Math.Log(numParcels) / Math.Log(2.0))+1);
             NUM_PARCELS_REQ = numParcels;
             MAX_DEV_MEAN = devMean;
@@ -49,15 +66,9 @@ namespace UFG
             return pt;
         }
 
-        public string getMSG()
-        {
-            return MSG;
-        }
+        public string getMSG() { return MSG; }
 
-        public List<Line> getPartitionLines()
-        {
-            return partitionLines;
-        }
+        public List<Line> getPartitionLines() { return partitionLines; }
 
         public void RUN_BSP_ALG()
         {
@@ -69,18 +80,25 @@ namespace UFG
             BspTreeCrvs.Add(crv);
             recSplit(0);
 
-            // new bsp object
-            myBspObj = new BspUfgObj(FCURVE, NUM_PARCELS_REQ);
-
             // transform all the curves
             var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
             SiteCrv.Transform(xform2);
             for(int i=0; i<FCURVE.Count; i++) { FCURVE[i].Transform(xform2); }
+
+            // subtract the internal curves
+            ExtractFCrvs = new List<Curve>();
+            if (IntCrv.Count > 0) { subtractCrv(); }
+            else { ExtractFCrvs = FCURVE; }
+
+            // new bsp object
+            // myBspObj = new BspUfgObj(FCURVE, NUM_PARCELS_REQ);
+            myBspObj = new BspUfgObj(ExtractFCrvs, NUM_PARCELS_REQ);
+
         }
 
         public BspUfgObj GetBspObj() { return myBspObj; }
 
-        public List<Curve> GetBspResults() { return FCURVE; }
+        public List<Curve> GetBspResults() { return ExtractFCrvs; } //return FCURVE; }
 
         public void recSplit(int recCounter)
         {
@@ -104,6 +122,23 @@ namespace UFG
                     MSG += "\naccepted crv index: " + i.ToString();
                     Curve crv = BspTreeCrvs[i];
                     FCURVE.Add(crv);
+                }
+            }
+        }
+
+        public void subtractCrv()
+        {
+            for (int i=0; i<FCURVE.Count; i++)
+            {
+                Curve crv = FCURVE[i];
+                for(int j=0; j<IntCrv.Count; j++)
+                {
+                    Curve crv2 = IntCrv[j];
+                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);
+                    for (int k = 0; k < crvDiffArr.Length; k++)
+                    {
+                        ExtractFCrvs.Add(crvDiffArr[k]);
+                    }
                 }
             }
         }
@@ -138,8 +173,6 @@ namespace UFG
             recSplit(rec_counter);
         }   // end method
 
-
-
         public List<Point3d[]> verSplit(Point3d[] T)
         {
             // take the curve bounding box, split & return list of point-array : two
@@ -162,8 +195,6 @@ namespace UFG
             List<Point3d[]> pts = new List<Point3d[]> { le, ri };
             return pts;
         }
-
-
 
         public List<Point3d[]> horSplit(Point3d[] T)
         {
