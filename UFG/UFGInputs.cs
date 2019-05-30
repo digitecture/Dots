@@ -10,7 +10,7 @@ namespace UFG
     public class UFGInputs : GH_Component
     {
         public UFGInputs()
-          : base("UFG", "iUfg",
+          : base("Extrude-Setbacks-From-Streets", "ext-setbacks",
             "Ensure Layer names are CAPITALIZED & match with A.0.0\nGenerates a set of solid geometry based on setbacks from street-types, fsr calculations and range of min-max heights",
             "DOTS", "UFG")
         {

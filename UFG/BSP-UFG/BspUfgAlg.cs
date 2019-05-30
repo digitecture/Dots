@@ -10,7 +10,7 @@ using Rhino.Geometry;
 namespace UFG
 
 {
-    class BSPAlg
+    class BspUfgAlg
     {
         string MSG = "";
         List<Curve> BspTreeCrvs = new List<Curve>();
@@ -28,9 +28,9 @@ namespace UFG
         double ROTATION; // {0, 2.PI}
         Point3d CEN;
 
-        BspObj myBspObj;
+        BspUfgObj myBspObj;
 
-        public BSPAlg(Curve crv, int numParcels, double devMean, double rot)
+        public BspUfgAlg(Curve crv, int numParcels, double devMean, double rot)
         {
             SiteCrv = crv;
             NUM_PARCELS = (int)((Math.Log(numParcels) / Math.Log(2.0))+1);
@@ -70,7 +70,7 @@ namespace UFG
             recSplit(0);
 
             // new bsp object
-            myBspObj = new BspObj(FCURVE, NUM_PARCELS_REQ);
+            myBspObj = new BspUfgObj(FCURVE, NUM_PARCELS_REQ);
 
             // transform all the curves
             var xform2 = Rhino.Geometry.Transform.Rotation(-ROTATION, CEN);
@@ -78,7 +78,7 @@ namespace UFG
             for(int i=0; i<FCURVE.Count; i++) { FCURVE[i].Transform(xform2); }
         }
 
-        public BspObj GetBspObj() { return myBspObj; }
+        public BspUfgObj GetBspObj() { return myBspObj; }
 
         public List<Curve> GetBspResults() { return FCURVE; }
 
@@ -128,11 +128,9 @@ namespace UFG
             Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1); 
             Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
 
-
             if (crvs1.Length > 0) {
                 for (int i = 0; i < crvs1.Length; i++) { BspTreeCrvs.Add(crvs1[i]); }
             }
-
             if (crvs2.Length > 0) {
                 for (int i = 0; i < crvs2.Length; i++) { BspTreeCrvs.Add(crvs2[i]); }
             }

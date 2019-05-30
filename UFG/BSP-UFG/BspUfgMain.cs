@@ -7,17 +7,17 @@ using Rhino.Geometry;
 namespace UFG
 
 {
-    public class BSP : GH_Component
+    public class BSP_UFG : GH_Component
     {
-        List<double> scoreLi = new List<double>();
-        List<string> scoreLiMsg = new List<string>();
-        List<BspObj> bspObjLi = new List<BspObj>();
+        // List<double> scoreLi = new List<double>();
+        // List<string> scoreLiMsg = new List<string>();
+        List<BspUfgObj> bspObjLi = new List<BspUfgObj>();
         List<Curve> thisFCRVS = new List<Curve>();
-        List<List<Curve>> allFCRVS = new List<List<Curve>>();
+        // List<List<Curve>> allFCRVS = new List<List<Curve>>();
 
-        public BSP()
-          : base("Parcel-Partition Algorithm", "bsp",
-              "Street Grid Algorithm -1",
+        public BSP_UFG()
+          : base("Parcel Generation", "parcel-gen",
+              "Generate Parcels from site boundary",
               "DOTS", "UFG")
         {
         }
@@ -43,8 +43,8 @@ namespace UFG
         {
             pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
             pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
-            pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
-            pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
+            // pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
+            // pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -67,31 +67,31 @@ namespace UFG
             List<Curve> lowestDevCrv = new List<Curve>();
             double minScore = 100000.00;
             int minIndex = 0;
-            double score = 0;
-            string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
+            // double score = 0;
+            // string minIndexScore = minIndex.ToString() + ": " + minScore.ToString();
 
             if (reset == true)
             {
-                scoreLi = new List<double>();
-                scoreLiMsg = new List<string>();
-                bspObjLi = new List<BspObj>();
+                // scoreLi = new List<double>();
+                // scoreLiMsg = new List<string>();
+                bspObjLi = new List<BspUfgObj>();
                 lowestDevCrv = new List<Curve>();
                 minIndex = 0;
-                score = 0;
-                minIndexScore = "";
+                // score = 0;
+                // minIndexScore = "";
                 thisFCRVS = new List<Curve>();
             }
 
             // int NumIters = scoreLi.Count;  //(int)numItrs;
             double Rotation = Rhino.RhinoMath.ToRadians(rot);
 
-            BSPAlg bspalg = new BSPAlg(SiteCrv, numParcels, devMean, Rotation);
+            BspUfgAlg bspalg = new BspUfgAlg(SiteCrv, numParcels, devMean, Rotation);
             bspalg.RUN_BSP_ALG();
-            BspObj mybspobj = bspalg.GetBspObj();
-            score= mybspobj.GetScore();
-            string myscoreMsg = mybspobj.GetMsg();
+            BspUfgObj mybspobj = bspalg.GetBspObj();
+            // score= mybspobj.GetScore();
+            // string myscoreMsg = mybspobj.GetMsg();
             bspObjLi.Add(mybspobj);
-            scoreLiMsg.Add(myscoreMsg);
+            // scoreLiMsg.Add(myscoreMsg);
 
             for (int i = 0; i < bspObjLi.Count; i++)
             {
@@ -102,20 +102,18 @@ namespace UFG
                     minIndex = i;
                 }
             }
-            minIndexScore = bspalg.getMSG() + "\n\n\n";
-            minIndexScore += minIndex.ToString() + ": " + minScore.ToString();
+            // minIndexScore = bspalg.getMSG() + "\n\n\n";
+
+            // minIndexScore += minIndex.ToString() + ": " + minScore.ToString();
 
             try { thisFCRVS = bspObjLi[showItr].GetCrvs(); } catch(Exception) { }
-
             try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch(Exception) { }
-
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
-
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
 
-            try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
+            // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
 
-            try { DA.SetData(3, minIndexScore); } catch (Exception) { }
+            // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
 
         }
 
