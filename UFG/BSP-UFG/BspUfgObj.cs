@@ -78,10 +78,6 @@ namespace UFG
         }
 
         public string GetMsg() { return MSG; }
-<<<<<<< HEAD:UFG/BSP-UFG/BspUfgObj.cs
 
-=======
-        
->>>>>>> f4078ec525df1ac7103ecae6d3e3d6d1875ec0ce:UFG/BSP-UFG/BspObj.cs
     }
 }
