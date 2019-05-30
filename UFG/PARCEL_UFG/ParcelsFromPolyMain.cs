@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace DOTS.SourceCode.UFG.FormConfig
+namespace UFG
 {
     public class FormConfig : GH_Component
     {
@@ -18,18 +18,23 @@ namespace DOTS.SourceCode.UFG.FormConfig
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddCurveParameter("Input Curves", "iCrvs", "list of curve-boundaries to be occupied by required typology", GH_ParamAccess.list);
-            pManager.AddNumberParameter("% FSR to Courtyard", "%-fsr-Courtyard", "Percentage of Fsrcourtyard", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Input site curve", "site", "curve-boundaries to be occupied by required typology", GH_ParamAccess.list);
+            pManager.AddNumberParameter("internal polyine", "int-poly", "internal polyine to guide parcel generation", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) 
-        { 
-
+        {
+            pManager.AddCurveParameter("output parcels", "out-polys", "output parcels generated", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA) 
-        { 
+        {
+            Curve site = null;
+            Curve poly = null;
+            if (!DA.GetData(0, ref site)) return;
+            if (!DA.GetData(1, ref poly)) return;
 
+            ParcelsFromPolyUtil util = new ParcelsFromPolyUtil(site, poly);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } } 
