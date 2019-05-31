@@ -27,11 +27,19 @@ def genHalfPlanes(site_crv, int_crv):
         used_crv=[]
         new_crv=[]
         for bsp_crv in bsp_tree:
-            crvA=rs.CurveBooleanIntersection(bsp_crv,polyA)
-            crvB=rs.CurveBooleanIntersection(bsp_crv,polyB)
-            used_crv.append(bsp_crv)
-            new_crv.append(crvA)
-            new_crv.append(crvB)
+            sum=0
+            try:
+                crvA=rs.CurveBooleanIntersection(bsp_crv,polyA)
+                new_crv.append(crvA)
+                sum+=1
+            except:pass
+            try:
+                crvB=rs.CurveBooleanIntersection(bsp_crv,polyB)
+                used_crv.append(bsp_crv)
+                sum+=1
+            except: pass
+            if(sum>0):
+                new_crv.append(crvB)
         for crv in new_crv:
             bsp_tree.append(crv)
         for crv in used_crv:
@@ -40,93 +48,14 @@ def genHalfPlanes(site_crv, int_crv):
         rs.DeleteObject(polyA)
         rs.DeleteObject(polyB)
     rs.DeleteObject(polyBB)
-    return rays
-
-
-#find orientation of q wrt pr
-def orientation(p,q,r):
-    orientation=0
-    t=(q[0]-p[0])
-    if(t==0):
-        t=0.001
-    s=(r[0]-q[0])
-    if(s==0):
-        s=0.001
-    tau=(q[1]-p[1])/t
-    mu=(r[1]-q[1])/s
-    if(tau<mu):
-        orientation =-1
-    elif(tau>mu):
-        orientation=1
-    else:
-        orientation =0
-    return orientation
-
-def initSplitCurve(crv, rays):
-    f_rays=[]
-    for ray in rays:
-        p_=ray[0]
-        q_=ray[1]
-        ray2=rs.AddLine(p_,q_)
-        intx=rs.CurveCurveIntersection(crv, ray2)
-        p=intx[0][1]
-        q=intx[1][1]
-        f_rays.append([p,q])
-        rs.DeleteObject(ray2)
-    return f_rays
-
-def splitCrv(site_crv, rays):
-    bsp_tree=[]
-    bsp_tree.append(site_crv)
-    ray=rays[0]
-    p=ray[0]
-    q=ray[1]
-    ray=rs.AddLine(p,q)
-    ptsA=[]
-    ptsB=[]
-    used=[]
-    for crv in bsp_tree:
-        try:
-            intx=rs.CurveCurveIntersection(crv, ray)
-            if(intx and len(intx)>0):
-                crv_pts=rs.CurvePoints(crv)
-                for pt in crv_pts:
-                    t=orientation(p,pt,q)
-                    if(t==1):
-                        ptsA.append(pt)
-                    else:
-                        ptsB.append(pt)
-                used.append(crv)
-                ptsA.insert(0,p)
-                ptsA.append(q)
-                ptsA.append(p)
-                polyA=rs.AddPolyline(ptsA)
-                bsp_tree.append(polyA)
-
-                
-                rs.DeleteObject(ray)
-            else:
-                continue
-        except:
-            pass
-        for i in used:
-            bsp_tree.remove(i)
-        
-            
-
-
+    return bsp_tree
 
 SITE_CRV=rs.GetObject("Site")
 INT_CRV=rs.GetObject("Int poly")
 
-
-
 rs.EnableRedraw(False)
 
-iRAYS=genHalfPlanes(SITE_CRV, INT_CRV)
-fRAYS=initSplitCurve(SITE_CRV, iRAYS)
+Bsp_Tree=genHalfPlanes(SITE_CRV, INT_CRV)
 
-#fRays=rs.GetObject()
-#splitCrv(SITE_CRV, fRAYS)
 
 rs.EnableRedraw(True)
