@@ -5,15 +5,15 @@ using Rhino.Geometry;
 
 namespace UFG
 {
-    public class BspObj
+    public class BspUfgObj
     {
         List<Curve> FCURVE;
         string MSG = "";
         int NUM_PARCELS_REQ;
 
-        public BspObj() { }
+        public BspUfgObj() { }
 
-        public BspObj(List<Curve> crvs, int num_parcels_req) 
+        public BspUfgObj(List<Curve> crvs, int num_parcels_req) 
         { 
             FCURVE = crvs;
             NUM_PARCELS_REQ = num_parcels_req;
@@ -78,6 +78,6 @@ namespace UFG
         }
 
         public string GetMsg() { return MSG; }
-        
+
     }
 }
