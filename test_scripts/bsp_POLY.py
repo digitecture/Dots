@@ -24,6 +24,7 @@ def genHalfPlanes(site_crv, int_crv):
         S=[q[0]+w[0],q[1]+w[1],0]
         polyA=rs.AddPolyline([p,q,s,r,p])
         polyB=rs.AddPolyline([p,q,S,R,p])
+        
         used_crv=[]
         new_crv=[]
         for bsp_crv in bsp_tree:
@@ -35,11 +36,12 @@ def genHalfPlanes(site_crv, int_crv):
             except:pass
             try:
                 crvB=rs.CurveBooleanIntersection(bsp_crv,polyB)
-                used_crv.append(bsp_crv)
+                new_crv.append(crvB)
                 sum+=1
             except: pass
             if(sum>0):
-                new_crv.append(crvB)
+                used_crv.append(bsp_crv)
+        
         for crv in new_crv:
             bsp_tree.append(crv)
         for crv in used_crv:
@@ -75,3 +77,113 @@ rs.EnableRedraw(False)
 Bsp_Tree=genHalfPlanes(SITE_CRV, INT_CRV)
 BSP_TREE=removePoly(Bsp_Tree, INT_CRV)
 rs.EnableRedraw(True)
+
+# c# code 
+"""
+# driver code
+List<Curve> BSP_TREE = GenHalfPlanes(SITE_CRV, INT_CRV);
+A=RemovePoly(BSP_TREE, INT_CRV);
+"""
+
+"""
+  public List<Curve> GenHalfPlanes(Curve site_crv, Curve int_crv){
+    //main bsp-tree
+    List<Curve> bsp_tree = new List<Curve>();
+    List<Curve> ray_bbox = new List<Curve>();
+
+    //bounding box of site-crv
+    var t = site_crv.GetBoundingBox(true);
+    Point3d A = t.Min;
+    Point3d C = t.Max;
+    Point3d B = new Point3d(C.X, A.Y, 0);
+    Point3d D = new Point3d(A.X, C.Y, 0);
+    Point3d[] pts = {A,B,C,D,A};
+
+    PolylineCurve polyBB = new PolylineCurve(pts);// polylinecurve of site
+    double diagB = 2 * A.DistanceTo(C);
+    List<Line> rays = new List<Line>();
+
+    //internal-polyline points
+    Polyline intPolyPts = new Polyline();
+    var t1 = int_crv.TryGetPolyline(out intPolyPts);
+    IEnumerator<Point3d> ptRator = intPolyPts.GetEnumerator();
+    List<Point3d> int_pts = new List<Point3d>();
+    while(ptRator.MoveNext()){
+      int_pts.Add(ptRator.Current);
+    }
+
+    bsp_tree.Add(site_crv);
+    for(int i = 0; i < int_pts.Count - 1; i++){
+      Point3d a = int_pts[i];
+      Point3d b = int_pts[i + 1];
+      Point3d m = new Point3d((a.X + b.X) / 2, (a.Y + b.Y) / 2, 0);
+      double normMA = m.DistanceTo(a);
+      double normMB = m.DistanceTo(b);
+
+      Point3d p = new Point3d(m.X + (a.X - m.X) * diagB / normMA, m.Y + (a.Y - m.Y) * diagB / normMA, 0);
+      Point3d q = new Point3d(m.X + (b.X - m.X) * diagB / normMB, m.Y + (b.Y - m.Y) * diagB / normMB, 0);
+      Point3d u = new Point3d(q.X - p.X, q.Y - p.Y, 0);
+      Point3d v = new Point3d(-u.Y, u.X, 0);
+      Point3d r = new Point3d(p.X + v.X, p.Y + v.Y, 0);
+      Point3d s = new Point3d(q.X + v.X, q.Y + v.Y, 0);
+      Point3d w = new Point3d(u.Y, -u.X, 0);
+      Point3d R = new Point3d(p.X + w.X, p.Y + w.Y, 0);
+      Point3d S = new Point3d(q.X + w.X, q.Y + w.Y, 0);
+
+      Point3d[] ptsA = {p,q,s,r,p};
+      PolylineCurve polyA = new PolylineCurve(ptsA);
+      Point3d[] ptsB = {p,q,S,R,p};
+      PolylineCurve polyB = new PolylineCurve(ptsB);
+
+      List<Curve> used_crv = new List<Curve>();
+      List<Curve> new_crv = new List<Curve>();
+      for(int j = 0; j < bsp_tree.Count; j++){
+        int sum = 0;
+        try
+        {
+          Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA);
+          for(int k = 0; k < crvA.Length; k++){
+            new_crv.Add(crvA[k]);
+            sum++;
+          }
+        }
+        catch(Exception){}
+        try
+        {
+          Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB);
+          for(int k = 0; k < crvB.Length; k++){
+            new_crv.Add(crvB[k]);
+            sum++;
+          }
+        }
+        catch(Exception){}
+        if(sum > 0){ used_crv.Add(bsp_tree[j]); }
+      }
+      for(int j = 0; j < new_crv.Count; j++){ bsp_tree.Add(new_crv[j]); }
+      for(int j = 0; j < used_crv.Count; j++){ bsp_tree.Remove(used_crv[j]);}
+    }
+    return bsp_tree;
+  }
+
+  public List<Curve> RemovePoly(List<Curve> bsp_tree, Curve int_crv){
+    List<Curve> del_crv = new List<Curve>();
+    List<Curve> used_crv = new List<Curve>();
+    for(int i = 0; i < bsp_tree.Count; i++){
+      try{
+        Point3d cen = AreaMassProperties.Compute(bsp_tree[i]).Centroid;
+        var t = bsp_tree[i].Contains(cen);
+        if(t.ToString().Equals("Inside")){
+          del_crv.Add(bsp_tree[i]);
+        }
+      }catch(Exception){}
+
+      for(int j = 0; j < del_crv.Count; j++){
+        bsp_tree.Remove(del_crv[j]);
+      }
+    }
+    return bsp_tree;
+  }
+
+
+
+"""
