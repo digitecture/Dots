@@ -43,8 +43,8 @@ namespace UFG
         {
             pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
             pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
-          //  pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
-          //  pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
+            // pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
+            // pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -112,11 +112,7 @@ namespace UFG
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
 
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
-
-          //  try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
-
-          //  try { DA.SetData(3, minIndexScore); } catch (Exception) { }
-
+           
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }
@@ -124,6 +120,10 @@ namespace UFG
         public override Guid ComponentGuid { get { return new Guid("3c14e4dd-7f66-4bc8-95d6-e53593d4ae10"); } }
     }
 }
+
+
+
+
 
 
 
