@@ -18,8 +18,8 @@ namespace UFG
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddCurveParameter("Input site curve", "site", "curve-boundaries to be occupied by required typology", GH_ParamAccess.list);
-            pManager.AddNumberParameter("internal polyine", "int-poly", "internal polyine to guide parcel generation", GH_ParamAccess.item);
+            pManager.AddCurveParameter("Input site curve", "site", "curve-boundaries to be occupied by required typology", GH_ParamAccess.item);
+            pManager.AddCurveParameter("internal polyine", "int-poly", "internal polyine to guide parcel generation", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager) 
@@ -34,7 +34,11 @@ namespace UFG
             if (!DA.GetData(0, ref site)) return;
             if (!DA.GetData(1, ref poly)) return;
 
-            ParcelsFromPolyUtil util = new ParcelsFromPolyUtil(site, poly);
+            ParcelsFromPolyUtil util = new ParcelsFromPolyUtil();
+            List<Curve> iniBspTree = util.GenHalfPlanes(site, poly);
+            //List<Curve> fBspTree = util.RemovePoly(iniBspTree, poly);
+
+            DA.SetDataList(0, iniBspTree);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } } 
