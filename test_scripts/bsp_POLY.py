@@ -45,17 +45,33 @@ def genHalfPlanes(site_crv, int_crv):
         for crv in used_crv:
             bsp_tree.remove(crv)
             rs.DeleteObject(crv)
+            
         rs.DeleteObject(polyA)
         rs.DeleteObject(polyB)
+        
     rs.DeleteObject(polyBB)
     return bsp_tree
+
+def removePoly(bsp_tree, int_crv):
+    del_crv=[]
+    used_crv=[]
+    for crv in bsp_tree:
+        try:
+            cen=rs.CurveAreaCentroid(crv)[0]
+            if(rs.PointInPlanarClosedCurve(cen,int_crv)==1):
+                del_crv.append(crv)
+        except:
+            print("error")
+    for crv in del_crv:
+        bsp_tree.remove(crv)
+        rs.DeleteObject(crv)
+    return bsp_tree
+
 
 SITE_CRV=rs.GetObject("Site")
 INT_CRV=rs.GetObject("Int poly")
 
 rs.EnableRedraw(False)
-
 Bsp_Tree=genHalfPlanes(SITE_CRV, INT_CRV)
-
-
+BSP_TREE=removePoly(Bsp_Tree, INT_CRV)
 rs.EnableRedraw(True)
