@@ -43,17 +43,15 @@ namespace UFG
         {
             pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
             pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
-<<<<<<< HEAD:UFG/BSP-UFG/BSP.cs
+
             // pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
             // pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
-=======
+
 
             // pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
             // pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);=======
             // pManager.AddTextParameter("Scores for all iteration", "all-scores", "score of each iterations", GH_ParamAccess.list);
             // pManager.AddTextParameter("Minimum Score", "min-score", "minimum score of all iterations", GH_ParamAccess.item);
-
->>>>>>> 68bde2a3dcbe590e2a18fc29267dc8cb49db5d7f:UFG/BSP-UFG/BspUfgMain.cs
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -122,17 +120,13 @@ namespace UFG
             try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch(Exception) { }
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
-<<<<<<< HEAD:UFG/BSP-UFG/BSP.cs
            
-=======
-
             // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
             // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
             // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
             // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
 
->>>>>>> 68bde2a3dcbe590e2a18fc29267dc8cb49db5d7f:UFG/BSP-UFG/BspUfgMain.cs
-        }
+    }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }
 
