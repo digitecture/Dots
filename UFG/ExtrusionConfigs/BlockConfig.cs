@@ -17,7 +17,7 @@ namespace Config
         }
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {
+        { 
             pManager.AddCurveParameter(
                 "Site Curve", 
                 "crv", 
