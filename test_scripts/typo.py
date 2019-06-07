@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import rhinoscriptsyntax as rs
 import Rhino
+=======
+import rhinoscriptsyntax as rs
+import Rhino
+>>>>>>> 862aeec34da318f0150fe27dbf64da83268484c3
 import scriptcontext
 import random
 import math
@@ -62,7 +67,11 @@ def getNormalVectorToSeg(seg, crv):
     w=[u[1],-u[0],0]
     R=[m[0]+dist*v[0],m[1]+dist*v[1],0]
     V=v
+<<<<<<< HEAD
     if(rs.PointInPlanarClosedCurve(R,crv)==0) :
+=======
+    if(rs.PointInPlanarClosedCurve(R,crv)==0):
+>>>>>>> 862aeec34da318f0150fe27dbf64da83268484c3
         R=[m[0]+dist*w[0],m[1]+dist*w[1],0]
         V=w
     return V
