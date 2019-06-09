@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 
 namespace SPG
-
 {
-
     class MakeGeomObjList
     {
-
-
         private List<string> input;
         private List<string> GeomObjLiStr;
         private List<GeomEntry> GeomObjLi;
