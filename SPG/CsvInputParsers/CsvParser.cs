@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 // in dotsdev.cs send string to here gen adj input
 // in dotsdev.cs send string to here gen geom input for spaces
 
-namespace SPG
+namespace DotsProj
 {
     class CsvParser
     {

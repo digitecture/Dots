@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class InputProc
     {

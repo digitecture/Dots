@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace SPG
+namespace DotsProj
 {
     public class CurveSkeleton : GH_Component
     {

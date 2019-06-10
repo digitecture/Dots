@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 
 {
     public class BSP_UFG_SUB : GH_Component
@@ -116,21 +116,14 @@ namespace UFG
 
             // minIndexScore = bspalg.getMSG() + "\n\n\n";
             // minIndexScore += minIndex.ToString() + ": " + minScore.ToString();
-
             try { thisFCRVS = bspObjLi[showItr].GetCrvs(); } catch (Exception) { }
             try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch (Exception) { }
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
 
-
-            // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
-            // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
-            // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
-            // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
-
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } }
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.rev_bsp_simple_sub; } }
 
         public override Guid ComponentGuid { get { return new Guid("636e9367-4457-4774-ae3c-9530400fb32b"); } }
     }

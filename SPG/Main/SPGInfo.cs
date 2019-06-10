@@ -2,7 +2,7 @@
 using System.Drawing;
 using Grasshopper.Kernel;
 
-namespace SPG
+namespace DotsProj
 
 {
     public class dots_devInfo : GH_AssemblyInfo

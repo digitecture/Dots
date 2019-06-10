@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace Config
+namespace DotsProj
 {
     public class BlockConfig : GH_Component
     {
@@ -85,7 +85,7 @@ namespace Config
                 double arSite = Rhino.Geometry.AreaMassProperties.Compute(sites[i]).Area;
                 double arOffset = AreaMassProperties.Compute(offsetCrv[0]).Area;
                 double ht = fsr*arSite/arOffset;
-                Extrusion mass = Extrusion.Create(offsetCrv[0], ht, true);
+                Extrusion mass = Extrusion.Create(offsetCrv[0], -ht, true);
                 msg += "\nar site: " + arSite.ToString() + "ar offset: "+arOffset.ToString() + "ht: "+ht.ToString();
                 massLi.Add(mass);
             }
@@ -93,7 +93,7 @@ namespace Config
             DA.SetData(1, msg);
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } }
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgextrbasic; } }
 
         public override Guid ComponentGuid { get { return new Guid("c81f5263-86b7-48a3-b3d7-6b462f5658f9"); } }
 
