@@ -37,7 +37,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             // 1. brep as massing
             pManager.AddBrepParameter("Output Massing Breps", "massing", "output massing from floor plates", GH_ParamAccess.list);
             // 2. msg from system
-            pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.item);
+            pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -69,7 +69,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
                 double x = Convert.ToDouble(htArr[i]);
                 htLi.Add(x);
             }
-
+            List<string> flrReqLi = new List<string>();
             List<Brep> brepLi = new List<Brep>();
             List<Curve> flrCrvLi = new List<Curve>();
             double spineht = 0.0;
@@ -90,16 +90,18 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
                     flrCrvLi.Add(c2);
                     flrItr += flrHt;
                 }
+                flrReqLi.Add(numFlrs.ToString());
                 Brep brep = Rhino.Geometry.Extrusion.Create(c1[0], -ht, true).ToBrep();
                 Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0, 0, spineht);
                 brep.Transform(xform);
                 brepLi.Add(brep);
                 //crvLi.Add(c1[0]);
-                spineht += di;
+                spineht += ht;
             }
 
             DA.SetDataList(0, flrCrvLi);
             DA.SetDataList(1, brepLi);
+            DA.SetDataList(2, flrReqLi);
         }
 
         protected override System.Drawing.Bitmap Icon

@@ -36,7 +36,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             // 1. brep as massing
             pManager.AddBrepParameter("Output Massing Breps", "massing", "output massing from floor plates", GH_ParamAccess.list);
             // 2. msg from system
-            pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.item);
+            pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -66,28 +66,36 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             double numFlrs = GFA / netAr;
             double reqHt = numFlrs * flrHt;
 
-            List<Curve> crvLi = new List<Curve>();
-            double flrCounter = 0.0;
-            for(int i=0; i<numFlrs; i++)
+            if(setback>0 && bayDepth>0 && flrHt > 0)
             {
-                Curve c0crv = outerCrvArr[0].DuplicateCurve();
-                Curve c1crv = innerCrvArr[0].DuplicateCurve();
-                Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0,0,flrCounter);
-                c0crv.Transform(xform);
-                c1crv.Transform(xform);
-                crvLi.Add(c0crv);
-                crvLi.Add(c1crv);
-                flrCounter += flrHt;
+                List<string> numFlrReqLi = new List<string>();
+                List<Curve> crvLi = new List<Curve>();
+                double flrCounter = 0.0;
+                for (int i = 0; i < numFlrs; i++)
+                {
+                    Curve c0crv = outerCrvArr[0].DuplicateCurve();
+                    Curve c1crv = innerCrvArr[0].DuplicateCurve();
+                    Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0, 0, flrCounter);
+                    c0crv.Transform(xform);
+                    c1crv.Transform(xform);
+                    crvLi.Add(c0crv);
+                    crvLi.Add(c1crv);
+                    flrCounter += flrHt;
+                }
+                numFlrReqLi.Add(flrCounter.ToString());
+
+                List<Brep> brepLi = new List<Brep>();
+                Brep outerBrep = Rhino.Geometry.Extrusion.Create(outerCrvArr[0], -reqHt, true).ToBrep();
+                Brep innerBrep = Rhino.Geometry.Extrusion.Create(innerCrvArr[0], -reqHt, true).ToBrep();
+                Brep[] netBrep = Brep.CreateBooleanDifference(outerBrep, innerBrep, 0.01);
+                brepLi.Add(netBrep[0]);
+
+                DA.SetDataList(0, crvLi);
+                DA.SetDataList(1, brepLi);
+                DA.SetDataList(2, numFlrReqLi);
             }
 
-            List<Brep> brepLi = new List<Brep>();
-            Brep outerBrep = Rhino.Geometry.Extrusion.Create(outerCrvArr[0], reqHt, true).ToBrep();
-            Brep innerBrep = Rhino.Geometry.Extrusion.Create(innerCrvArr[0], reqHt, true).ToBrep();
-            Brep[] netBrep = Brep.CreateBooleanDifference(outerBrep, innerBrep, 0.01);
-            brepLi.Add(netBrep[0]);
 
-            DA.SetDataList(0, crvLi);
-            DA.SetDataList(1, brepLi);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }
