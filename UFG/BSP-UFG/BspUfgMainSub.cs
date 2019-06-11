@@ -116,21 +116,18 @@ namespace DotsProj
 
             // minIndexScore = bspalg.getMSG() + "\n\n\n";
             // minIndexScore += minIndex.ToString() + ": " + minScore.ToString();
-
             try { thisFCRVS = bspObjLi[showItr].GetCrvs(); } catch (Exception) { }
             try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch (Exception) { }
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
 
-
-            // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
-            // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
-            // try { DA.SetDataList(2, scoreLiMsg); } catch (Exception) { }
-            // try { DA.SetData(3, minIndexScore); } catch (Exception) { }
-
         }
 
+<<<<<<< HEAD
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.bsp_simple_sub; } }
+=======
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.rev_bsp_simple_sub; } }
+>>>>>>> 5ee5c1d8817423d6563cc4c41db12cbacbb2dcb6
 
         public override Guid ComponentGuid { get { return new Guid("636e9367-4457-4774-ae3c-9530400fb32b"); } }
     }
