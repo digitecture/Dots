@@ -134,8 +134,12 @@ namespace DotsProj
                 for(int j=0; j<IntCrv.Count; j++)
                 {
                     Curve crv2 = IntCrv[j];
+<<<<<<< HEAD
                     //Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
                     Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);
+=======
+                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
                     for (int k = 0; k < crvDiffArr.Length; k++)
                     {
                         ExtractFCrvs.Add(crvDiffArr[k]);
@@ -161,10 +165,15 @@ namespace DotsProj
             PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
 
             // get intersection with main site crv
+<<<<<<< HEAD
             // Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
             // Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
             Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);
             Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
+=======
+            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
 
             if (crvs1.Length > 0) {
                 for (int i = 0; i < crvs1.Length; i++) { BspTreeCrvs.Add(crvs1[i]); }

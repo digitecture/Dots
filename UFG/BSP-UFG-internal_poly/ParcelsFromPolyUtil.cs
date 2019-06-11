@@ -62,9 +62,14 @@ namespace DotsProj
                     int sum = 0;
                     try 
                     { 
+<<<<<<< HEAD:UFG/BSP-UFG-internal_poly/ParcelsFromPolyUtil.cs
                         //Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                         Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA);
                         for (int k=0; k<crvA.Length; k++)
+=======
+                        Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);  
+                        for(int k=0; k<crvA.Length; k++)
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322:UFG/BSP-UFG-internal_poly/ParcelsFromPolyUtil.cs
                         {
                             new_crv.Add(crvA[k]);
                             sum++;
@@ -73,9 +78,14 @@ namespace DotsProj
                     catch (Exception) { }
                     try
                     {
+<<<<<<< HEAD:UFG/BSP-UFG-internal_poly/ParcelsFromPolyUtil.cs
                         //Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                         Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB);
                         for (int k=0; k<crvB.Length; k++)
+=======
+                        Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+                        for(int k=0; k<crvB.Length; k++)
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322:UFG/BSP-UFG-internal_poly/ParcelsFromPolyUtil.cs
                         {
                             new_crv.Add(crvB[k]);
                             sum++;

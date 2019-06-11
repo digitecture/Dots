@@ -37,7 +37,11 @@ namespace DotsProj
         {
             pManager.AddCurveParameter("Output Floor Curves", "floors", "output floor plates", GH_ParamAccess.list);
             pManager.AddBrepParameter("Output Massing Breps", "massing", "output massing from floor plates", GH_ParamAccess.list);
+<<<<<<< HEAD
             pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.item);
+=======
+            pManager.AddTextParameter("reflect inputs", "inputs", "check if all inputs are correct", GH_ParamAccess.item);
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -87,16 +91,24 @@ namespace DotsProj
             }
             str += str3;
 
+<<<<<<< HEAD
+=======
+            DA.SetData(2, str);
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
 
             TypologyMethods typologyMethods = new TypologyMethods(siteCrv, fsr, setback, depthFlr, gapBays, stepbacks, stepbackHts);
             typologyMethods.GenExtrBlock();
             typologyMethods.GenerateCourtyardBlock();
             List<Brep> brepLi = typologyMethods.GetGeneratedSolids();
+<<<<<<< HEAD
             DA.SetDataList(1, brepLi);
 
 
             string msg = typologyMethods.getMsg();
             DA.SetData(2, msg);
+=======
+            DA.SetData(1, brepLi);
+>>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
         }
 
         protected override System.Drawing.Bitmap Icon
