@@ -50,7 +50,7 @@ namespace DotsProj
             string stepbackStr = "";
             string stepbackHtStr = "";
             List<double> stepbacks = new List<double>();
-            List<double>stepbackHts = new List<double>();
+            List<double> stepbackHts = new List<double>();
 
             if (!DA.GetData(0, ref siteCrv)) return;
             if (!DA.GetData(1, ref fsr)) return;
@@ -62,13 +62,13 @@ namespace DotsProj
 
             string str = "inputs:\n";
             str += Math.Round(fsr, 2).ToString() + "\n";
-            str += Math.Round(setback, 2).ToString()+"\n";
+            str += Math.Round(setback, 2).ToString() + "\n";
             str += Math.Round(depthFlr, 2).ToString() + "\n";
             str += Math.Round(gapBays, 2).ToString() + "\n";
 
             string str2 = "Stepbacks: ";
             string[] stepbackArr = stepbackStr.Split(',');
-            for(int i=0; i<stepbackArr.Length; i++)
+            for (int i = 0; i < stepbackArr.Length; i++)
             {
                 double x = Convert.ToDouble(stepbackArr[i]);
                 stepbacks.Add(x);
@@ -81,20 +81,22 @@ namespace DotsProj
             string[] stepbackHtArr = stepbackHtStr.Split(',');
             for (int i = 0; i < stepbackHtArr.Length; i++)
             {
-                double x=Convert.ToDouble(stepbackHtArr[i]);
+                double x = Convert.ToDouble(stepbackHtArr[i]);
                 stepbackHts.Add(x);
-                str3 += Math.Round(x,2).ToString() + ",";
+                str3 += Math.Round(x, 2).ToString() + ",";
             }
             str += str3;
 
 
             TypologyMethods typologyMethods = new TypologyMethods(siteCrv, fsr, setback, depthFlr, gapBays, stepbacks, stepbackHts);
-            typologyMethods.GenExtrBlock();
-            typologyMethods.GenerateCourtyardBlock();
-            List<Brep> brepLi = typologyMethods.GetGeneratedSolids();
-            DA.SetDataList(1, brepLi);
 
-
+            if (setback > 0 && fsr > 0)
+            {
+                typologyMethods.GenExtrBlock();
+                typologyMethods.GenerateCourtyardBlock();
+                List<Brep> brepLi = typologyMethods.GetGeneratedSolids();
+                DA.SetDataList(1, brepLi);
+            }
             string msg = typologyMethods.getMsg();
             DA.SetData(2, msg);
         }
