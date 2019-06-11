@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class FormConfig : GH_Component
     {
@@ -41,7 +41,7 @@ namespace UFG
             DA.SetDataList(0, iniBspTree);
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } } 
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.parcel_gen_intPoly; } } 
 
         public override Guid ComponentGuid { get { return new Guid("db513281-f7b3-4e79-88e6-ae9b2eafb9d5"); } }
 

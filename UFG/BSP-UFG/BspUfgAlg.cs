@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 
 {
     class BspUfgAlg
@@ -134,6 +134,7 @@ namespace UFG
                 for(int j=0; j<IntCrv.Count; j++)
                 {
                     Curve crv2 = IntCrv[j];
+                    //Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
                     Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);
                     for (int k = 0; k < crvDiffArr.Length; k++)
                     {
@@ -160,7 +161,9 @@ namespace UFG
             PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
 
             // get intersection with main site crv
-            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1); 
+            // Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
+            // Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
+            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);
             Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
 
             if (crvs1.Length > 0) {

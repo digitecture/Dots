@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class ParcelsFromPolyUtil
     {
@@ -62,8 +62,9 @@ namespace UFG
                     int sum = 0;
                     try 
                     { 
-                        Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA);  
-                        for(int k=0; k<crvA.Length; k++)
+                        //Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+                        Curve[] crvA = Curve.CreateBooleanIntersection(bsp_tree[j], polyA);
+                        for (int k=0; k<crvA.Length; k++)
                         {
                             new_crv.Add(crvA[k]);
                             sum++;
@@ -72,8 +73,9 @@ namespace UFG
                     catch (Exception) { }
                     try
                     {
+                        //Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                         Curve[] crvB = Curve.CreateBooleanIntersection(bsp_tree[j], polyB);
-                        for(int k=0; k<crvB.Length; k++)
+                        for (int k=0; k<crvB.Length; k++)
                         {
                             new_crv.Add(crvB[k]);
                             sum++;
@@ -99,7 +101,7 @@ namespace UFG
                 try
                 {
                     Point3d cen = AreaMassProperties.Compute(bsp_tree[i]).Centroid;
-                    var t=bsp_tree[i].Contains(cen);
+                    PointContainment t=bsp_tree[i].Contains(cen, Plane.WorldXY, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                     if (t.ToString().Equals("Inside"))
                     {
                         del_crv.Add(bsp_tree[i]);

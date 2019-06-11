@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SPG
+namespace DotsProj
 {
     class MakeGeomObjList
     {
