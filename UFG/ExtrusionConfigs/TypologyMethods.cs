@@ -17,51 +17,62 @@ namespace DotsProj
         private double FloorDepth = 0.0;
         private double BayGap = 0.0; // courtyard, distance between two double-loaded bays
         private double FSR = 2.75;
-        private List<double> StepbackArr;
-        private List<double> StepbackHtArr;
+        double FLR_HT;
+        private List<double> StepbackLi;
+        private List<double> StepbackHtLi;
 
         private List<Brep> SolidLi;
-        private List<Curve> CurveLi;
+        private List<Curve> flrCrvLi;
 
         private string MSG = "";
 
         public TypologyMethods(
                 Curve sitecrv, 
-                double fsr, double setback, double depthflr, double gapbays,
-                List<double> stepbacks, List<double> stepbackhts
+                double fsr, double depthflr, double gapbays,
+                List<double> stepbacks, List<double> stepbackhts, double flrht
             )
         {
             SiteCrv = sitecrv;
             FSR = fsr;
-            Setback = setback;
-            StepbackArr = stepbacks;
             FloorDepth = depthflr;
             BayGap = gapbays;
-            StepbackArr = stepbacks;
-            StepbackHtArr = stepbackhts;
+            StepbackLi = stepbacks;
+            Setback = StepbackLi[0];
+            StepbackHtLi = stepbackhts;
             SolidLi = new List<Brep>();
+            flrCrvLi = new List<Curve>();
+            FLR_HT = flrht;
         }
 
         public void GenExtrBlock()
         {
             Point3d cen = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid;
-            var setbackCrv = SiteCrv.Offset(
-                cen,
-                Vector3d.ZAxis,Setback,
+            Curve[] setbackCrv = SiteCrv.Offset(
+                Plane.WorldXY,
+                Setback,
                 Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance,
                 CurveOffsetCornerStyle.Sharp
                 );
-            try
+            for(int i=0; i<setbackCrv.Length; i++)
             {
-                double siteAr = Rhino.Geometry.AreaMassProperties.Compute(setbackCrv).Area;
-                double offAr = Rhino.Geometry.AreaMassProperties.Compute(setbackCrv).Area;
-                double ht = siteAr * FSR / offAr;
-                Brep SOLID = Extrusion.Create(setbackCrv[0], - ht, true).ToBrep();
+                if (!setbackCrv[i].IsClosed) continue;
+                double siteAr = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Area;
+                double offAr = Rhino.Geometry.AreaMassProperties.Compute(setbackCrv[i]).Area;
+                double numflrs = siteAr * FSR / offAr;
+                double ht = numflrs * FLR_HT;
+                Brep SOLID = Extrusion.Create(setbackCrv[i], -ht, true).ToBrep();
                 SolidLi.Add(SOLID);
-                CurveLi.Add(setbackCrv[0]);
+                flrCrvLi.Add(setbackCrv[i]);
+                double flrht = 0.0;
+                for (int j = 0; j < numflrs; j++)
+                {
+                    Curve flrcrv = setbackCrv[i].DuplicateCurve();
+                    Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0,0,FLR_HT*j);
+                    flrcrv.Transform(xform);
+                    flrCrvLi.Add(flrcrv);
+                }
                 MSG += "solid added";
             }
-            catch (Exception) { MSG += "solid NOT added"; }
         }
 
         public void GenerateCourtyardBlock()
@@ -85,7 +96,19 @@ namespace DotsProj
             Curve innerCrv = innerCrv0[0];
             double siteAr = AreaMassProperties.Compute(SiteCrv).Area;
             double netAr = AreaMassProperties.Compute(setbackCrv).Area - AreaMassProperties.Compute(innerCrv).Area;
-            double ht = siteAr * FSR / netAr;
+            int numflrs = (int) Math.Ceiling(siteAr * FSR / netAr);
+            double ht = numflrs * FLR_HT;
+            for(int i=0; i<numflrs; i++)
+            {
+                Rhino.Geometry.Transform xform=Rhino.Geometry.Transform.Translation(0,0,i * FLR_HT);
+                Curve c0 = innerCrv.DuplicateCurve();
+                c0.Transform(xform);
+                flrCrvLi.Add(c0);
+                Curve c1 = setbackCrv.DuplicateCurve();
+                c1.Transform(xform);
+                flrCrvLi.Add(c1);
+            }
+            
             Brep innerSolid = Extrusion.Create(innerCrv, -ht, true).ToBrep();
             Brep outerSolid = Extrusion.Create(setbackCrv, -ht, true).ToBrep();
             Brep[] outer = { outerSolid };
@@ -95,7 +118,43 @@ namespace DotsProj
             catch (Exception) { }
         }
 
-        public List<Curve> GetGeneratedCrvs() { return CurveLi; }
+        public List<Brep> GenStagerredBlock()
+        {
+            List<Brep> stagerredMassLi = new List<Brep>();
+            double reqGfa = FSR*AreaMassProperties.Compute(SiteCrv).Area;
+            double spineHt = 0.0;
+            double arCounter = 0.0;
+            Curve[] iniCrv = { SiteCrv };
+
+            double spineht = 0.0;
+            Curve c0 = SiteCrv.DuplicateCurve();
+            for (int i = 0; i < StepbackLi.Count; i++)
+            {
+                Point3d cen = AreaMassProperties.Compute(c0).Centroid;
+                double di = StepbackLi[i];
+                double ht = StepbackHtLi[i];
+                Curve[] c1=c0.Offset(cen, Vector3d.ZAxis, di, 0.01, CurveOffsetCornerStyle.Sharp);
+                Brep brep = Rhino.Geometry.Extrusion.Create(c1[0], -ht, true).ToBrep();
+                Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0, 0, spineht);
+                brep.Transform(xform);
+                stagerredMassLi.Add(brep);
+                spineht += ht;
+            }
+            return stagerredMassLi;
+        }
+
+        public Curve[] genStepbackCrvs(Curve crv, double se)
+        {
+            Curve[] res = crv.Offset(
+                Plane.WorldXY, 
+                se, 
+                Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, 
+                CurveOffsetCornerStyle.Sharp
+                );
+            return res;
+        }
+
+        public List<Curve> GetGeneratedCrvs() { return flrCrvLi; }
 
         public List<Brep> GetGeneratedSolids() { return SolidLi; }
 
