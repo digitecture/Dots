@@ -128,15 +128,7 @@ namespace DotsProj
 
     }
 
-<<<<<<< HEAD
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.revbspSimple; } }
-=======
-<<<<<<< HEAD
-        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.bspSimple; } }
-=======
-        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.revbspSimple; } }
->>>>>>> 5ee5c1d8817423d6563cc4c41db12cbacbb2dcb6
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
 
         public override Guid ComponentGuid { get { return new Guid("3c14e4dd-7f66-4bc8-95d6-e53593d4ae10"); } }
     }

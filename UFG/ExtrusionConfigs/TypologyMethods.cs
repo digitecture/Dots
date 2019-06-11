@@ -23,11 +23,8 @@ namespace DotsProj
         private List<Brep> SolidLi;
         private List<Curve> CurveLi;
 
-<<<<<<< HEAD
         private string MSG = "";
 
-=======
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
         public TypologyMethods(
                 Curve sitecrv, 
                 double fsr, double setback, double depthflr, double gapbays,
@@ -42,10 +39,7 @@ namespace DotsProj
             BayGap = gapbays;
             StepbackArr = stepbacks;
             StepbackHtArr = stepbackhts;
-<<<<<<< HEAD
             SolidLi = new List<Brep>();
-=======
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
         }
 
         public void GenExtrBlock()
@@ -62,20 +56,12 @@ namespace DotsProj
                 double siteAr = Rhino.Geometry.AreaMassProperties.Compute(setbackCrv).Area;
                 double offAr = Rhino.Geometry.AreaMassProperties.Compute(setbackCrv).Area;
                 double ht = siteAr * FSR / offAr;
-<<<<<<< HEAD
                 Brep SOLID = Extrusion.Create(setbackCrv[0], - ht, true).ToBrep();
                 SolidLi.Add(SOLID);
                 CurveLi.Add(setbackCrv[0]);
                 MSG += "solid added";
             }
             catch (Exception) { MSG += "solid NOT added"; }
-=======
-                Brep SOLID = Extrusion.Create(setbackCrv[0], -ht, true).ToBrep();
-                SolidLi.Add(SOLID);
-                CurveLi.Add(setbackCrv[0]);
-            }
-            catch (Exception) { }
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
         }
 
         public void GenerateCourtyardBlock()
@@ -97,17 +83,11 @@ namespace DotsProj
                 CurveOffsetCornerStyle.Sharp
             );
             Curve innerCrv = innerCrv0[0];
-<<<<<<< HEAD
             double siteAr = AreaMassProperties.Compute(SiteCrv).Area;
             double netAr = AreaMassProperties.Compute(setbackCrv).Area - AreaMassProperties.Compute(innerCrv).Area;
             double ht = siteAr * FSR / netAr;
             Brep innerSolid = Extrusion.Create(innerCrv, -ht, true).ToBrep();
             Brep outerSolid = Extrusion.Create(setbackCrv, -ht, true).ToBrep();
-=======
-            double ht = AreaMassProperties.Compute(SiteCrv).Area / (AreaMassProperties.Compute(setbackCrv).Area - AreaMassProperties.Compute(innerCrv).Area);
-            Brep innerSolid = Extrusion.Create(innerCrv, ht, true).ToBrep();
-            Brep outerSolid = Extrusion.Create(setbackCrv, ht, true).ToBrep();
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
             Brep[] outer = { outerSolid };
             Brep[] inner = { innerSolid };
             Brep[] reqSolid= Brep.CreateBooleanDifference(outer, inner, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
@@ -119,14 +99,11 @@ namespace DotsProj
 
         public List<Brep> GetGeneratedSolids() { return SolidLi; }
 
-<<<<<<< HEAD
         public string getMsg()
         {
             MSG += "msg received";
             return MSG;
         }
 
-=======
->>>>>>> 2efda20e90b3f6f4354dccb97b7a409ba15c7322
     }
 }
