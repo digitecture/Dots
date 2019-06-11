@@ -5,7 +5,7 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class ParcelsFromPolyUtil
     {

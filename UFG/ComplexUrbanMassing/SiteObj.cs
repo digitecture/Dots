@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Rhino;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class SiteObj
     {

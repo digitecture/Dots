@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 
 {
     public class BSP_UFG_SUB : GH_Component
@@ -130,7 +130,7 @@ namespace UFG
 
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } }
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.bsp_simple_sub; } }
 
         public override Guid ComponentGuid { get { return new Guid("636e9367-4457-4774-ae3c-9530400fb32b"); } }
     }

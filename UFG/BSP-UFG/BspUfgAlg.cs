@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 
 {
     class BspUfgAlg

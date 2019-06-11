@@ -5,12 +5,12 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace UFG
+namespace DotsProj
 {
     public class UFGInputs : GH_Component
     {
         public UFGInputs()
-          : base("Extrude-Setbacks-From-Streets", "ext-setbacks",
+          : base("Urban Massing from site, fsr, setbacks & streets", "ext-setbacks",
             "Ensure Layer names are CAPITALIZED & match with A.0.0\nGenerates a set of solid geometry based on setbacks from street-types, fsr calculations and range of min-max heights",
             "DOTS", "UFG")
         {
@@ -19,11 +19,11 @@ namespace UFG
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             // 0.
-            pManager.AddTextParameter("Input-Streets", "street-layer-names", "Input for streets: Layer names (CAPITALIZED) separated by comma \nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
-            // 1.
-            pManager.AddTextParameter("Input-Setbacks", "corresponding-street-setbacks", "Corresponding Input for setbacks: Enter numbers separated by comms\nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
-            // 2.
             pManager.AddCurveParameter("Input-Site-Curves", "inp-site-crvs", "Select all site boundaries: closed planar curves (polylines, nurbs, etc)\nPreferred Input Type: CRV & select multiple curves", GH_ParamAccess.list);
+            // 1.
+            pManager.AddTextParameter("Input-Streets", "street-layer-names", "Input for streets: Layer names (CAPITALIZED) separated by comma \nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
+            // 2.
+            pManager.AddTextParameter("Input-Setbacks", "corresponding-street-setbacks", "Corresponding Input for setbacks: Enter numbers separated by comms\nPreferred Input Type: write text in PANEL", GH_ParamAccess.item);
             // 3. 
             pManager.AddNumberParameter("Input-FSR", "input-fsr", "Default Value=2.5\nEnter a number for FSR calculations\nPreferred Input Type: NUMERIC SLIDER", GH_ParamAccess.item);
             }
@@ -42,8 +42,8 @@ namespace UFG
             string streetLayerNames = "";
             string setbacks = "";
 
-            DA.GetData(0, ref streetLayerNames); // GET THE STRING : LAYER NAMES
-            DA.GetData(1, ref setbacks); // GET THE STRING : SETBACK DISTANCES
+            DA.GetData(1, ref streetLayerNames); // GET THE STRING : LAYER NAMES
+            DA.GetData(2, ref setbacks); // GET THE STRING : SETBACK DISTANCES
 
             InputProc inputproc = new InputProc(streetLayerNames, setbacks);
 
@@ -53,7 +53,7 @@ namespace UFG
             double FSR = 2.5;
             double MAXHT = 50.0;
             double MINHT = 0.0;
-            DA.GetDataList(2, tempSITES);
+            DA.GetDataList(0, tempSITES);
             DA.GetData(3, ref FSR);
             List<Curve> SITES = new List<Curve>();
 
@@ -101,7 +101,7 @@ namespace UFG
 
         protected override System.Drawing.Bitmap Icon
         {
-            get { return null; }
+            get { return Properties.Resources.ufgComplexExtr; }
         }
 
         public override Guid ComponentGuid

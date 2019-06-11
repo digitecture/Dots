@@ -6,7 +6,7 @@ using Rhino.Geometry;
 using Rhino;
 using Rhino.DocObjects;
 
-namespace SPG
+namespace DotsProj
 {
     public class SPG : GH_Component
     {

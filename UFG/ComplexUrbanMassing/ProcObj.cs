@@ -6,7 +6,7 @@ using Rhino.Geometry;
 
 //created in InputProc
 // object with list<street>, layer name, setback
-namespace UFG
+namespace DotsProj
 {
     public class ProcObj
     {

@@ -8,7 +8,7 @@ using Rhino.Input;
 using Rhino.Input.Custom;
 using Rhino.UI;
 
-namespace Config
+namespace DotsProj
 {
     public class BlockTypology
     {
