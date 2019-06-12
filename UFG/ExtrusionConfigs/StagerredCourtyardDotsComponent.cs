@@ -9,6 +9,7 @@ namespace StagerredCourtyardDots
 {
     public class StagerredCourtyardDotsComponent : GH_Component
     {
+        Random rnd = new Random();
         public StagerredCourtyardDotsComponent()
           : base("StagerredCourtyardDotsComponent", "Nickname",
             "StagerredCourtyardDotsComponent description",
@@ -21,6 +22,7 @@ namespace StagerredCourtyardDots
             pManager.AddCurveParameter("site", "site", "site", GH_ParamAccess.item);
             pManager.AddNumberParameter("offset", "offset", "offset", GH_ParamAccess.item);
             pManager.AddIntegerParameter("number of divisions", "div", "number of divisions of the site curve", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("number of Peaks", "peaks", "number of Peaks of the site curve", GH_ParamAccess.item);
 
         }
 
@@ -38,10 +40,12 @@ namespace StagerredCourtyardDots
             Curve site = null;
             double offset = double.NaN;
             int numDiv = 10;
+            int numPeaks = 10;
 
             if (!DA.GetData(0, ref site)) return;
             if (!DA.GetData(1, ref offset)) return;
             if (!DA.GetData(2, ref numDiv)) return;
+            if (!DA.GetData(3, ref numPeaks)) return;
 
             Curve c2 = site.DuplicateCurve();
             Curve[] c2Offs;
@@ -59,11 +63,11 @@ namespace StagerredCourtyardDots
             Curve c2Off = c2Offs[0];
             DA.SetData(0, c2Off);
 
-            double[] p= c2Off.DivideByCount(numDiv, true);
+            double[] p= site.DivideByCount(numDiv, true);
             List<Point3d> ptLi=new List<Point3d>();
             for(int i=0; i<p.Length; i++)
             {
-                Point3d pts = c2Off.PointAt(p[i]);
+                Point3d pts = site.PointAt(p[i]);
                 ptLi.Add(pts);
             }
             DA.SetDataList(1, ptLi);
@@ -83,31 +87,35 @@ namespace StagerredCourtyardDots
                     P = ptLi[i - 1];
                     Q = ptLi[i];
                 }
-                double dx = P.X - (Q.Y - P.Y);
-                double dy = P.Y + (Q.X - P.X);
-                double ex = P.X + (Q.Y - P.Y) * 100;
-                double ey = P.Y - (Q.X - P.X) * 100;
+                double sc = 1/P.DistanceTo(Q);
+                double sc2 = 1.0;
+                double dx = P.X - (Q.Y - P.Y) * sc;
+                double dy = P.Y + (Q.X - P.X) * sc;
+                // double ex = P.X + (Q.Y - P.Y) * sc;
+                // double ey = P.Y - (Q.X - P.X) * sc;
                 Point3d u = new Point3d(dx, dy, 0);
-                Point3d v = new Point3d(ex, ey, 0);
-                LineCurve linePu = new LineCurve(P, u);
-                LineCurve linePv = new LineCurve(P, v);
-                var intxPv = Rhino.Geometry.Intersect.Intersection.CurveCurve(site, linePv, 0.01, 0.01);
-                var intxPu = Rhino.Geometry.Intersect.Intersection.CurveCurve(site, linePu, 0.01, 0.01);
-                try
+                //Point3d v = new Point3d(ex, ey, 0);
+
+                double dx2 = P.X - (Q.Y - P.Y) * sc2;
+                double dy2 = P.Y + (Q.X - P.X) * sc2;
+                double ex2 = P.X + (Q.Y - P.Y) * sc2;
+                double ey2 = P.Y - (Q.X - P.X) * sc2;
+                Point3d u2 = new Point3d(dx2, dy2, 0);
+                Point3d v2 = new Point3d(ex2, ey2, 0);
+
+                Rhino.Geometry.PointContainment contU = site.Contains(u);
+                LineCurve linePu = new LineCurve();
+                if (contU.ToString() == "Inside")
                 {
-                    Point3d Av = intxPv[0].PointA;
-                    Point3d Au = intxPu[0].PointA2;
-                    if (P.DistanceTo(Av) > P.DistanceTo(Au))
-                    {
-                        LineCurve linePw = new LineCurve(P, Au);
-                        lineLi.Add(linePw);
-                    }
-                    else
-                    {
-                        LineCurve linePw = new LineCurve(P, Av);
-                        lineLi.Add(linePw);
-                    }
-                }catch (Exception) { }
+                    linePu = new LineCurve(P, u2);
+                }
+                else
+                {
+                    linePu = new LineCurve(P, v2);
+                }
+
+                lineLi.Add(linePu);
+
             }
             
             DA.SetDataList(2, lineLi);
@@ -140,7 +148,15 @@ namespace StagerredCourtyardDots
                     polyCrvLi.Add(poly);
                 }
             }
-            DA.SetDataList(3, polyCrvLi);
+
+            List<PolylineCurve> fPolyLi = new List<PolylineCurve>();
+            int numSel = numPeaks;
+            for(int i=0; i<numSel; i++)
+            {
+                int idx=rnd.Next(polyCrvLi.Count);
+                fPolyLi.Add(polyCrvLi[idx]);
+            }
+            DA.SetDataList(3, fPolyLi);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return null; } }
