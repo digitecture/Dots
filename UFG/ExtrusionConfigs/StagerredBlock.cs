@@ -108,7 +108,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
         {
             get
             {
-                return null;
+                return Properties.Resources.ufgstagerredExtr;
             }
         }
 

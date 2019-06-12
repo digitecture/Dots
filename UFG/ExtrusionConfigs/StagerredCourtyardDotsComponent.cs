@@ -5,15 +5,15 @@ using Grasshopper;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace StagerredCourtyardDots
+namespace DotsProj
 {
     public class StagerredCourtyardDotsComponent : GH_Component
     {
         Random rnd = new Random();
         public StagerredCourtyardDotsComponent()
-          : base("StagerredCourtyardDotsComponent", "Nickname",
+          : base("StagerredCourtyardDotsComponent", "stagerred-courtyard",
             "StagerredCourtyardDotsComponent description",
-            "Category", "Subcategory")
+            "DOTS", "UFG")
         {
         }
 
@@ -159,7 +159,7 @@ namespace StagerredCourtyardDots
             DA.SetDataList(3, fPolyLi);
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } }
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgStagerredCourtyardExtr; } }
 
         public override Guid ComponentGuid {  get { return new Guid("48a70716-4b69-4b4c-8440-24be62b00616"); }  }
     }

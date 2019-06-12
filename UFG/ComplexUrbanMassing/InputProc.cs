@@ -15,6 +15,11 @@ namespace DotsProj
 
         public InputProc() { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:UFG.InputProc"/> class.
+        /// </summary>
+        /// <param name="streets">Streets.</param>
+        /// <param name="setbacks">Setbacks.</param>
         public InputProc(string streets, string setbacks)
         {
             STREET_NAMES = new List<string>();
@@ -31,6 +36,12 @@ namespace DotsProj
             GenProcObj(); // PROCOBJLI updated from GetLayerGeom() method
         }
 
+        /// <summary>
+        /// Processes the stringlist.
+        /// generate list of strings by splitting a string
+        /// </summary>
+        /// <returns>The stringlist.</returns>
+        /// <param name="input">Input.</param>
         public List<string> ProcessStringlist(string input)
         {
             List<string> names = new List<string>();
@@ -42,6 +53,12 @@ namespace DotsProj
             return names;
         }
 
+        /// <summary>
+        /// Procs the setbacks.
+        /// generate list of double for setbacks from strings 
+        /// </summary>
+        /// <returns>The setbacks.</returns>
+        /// <param name="input">Input.</param>
         public List<double> ProcSetbacks(List<string> input)
         {
             List<double> setbacks = new List<double>();
@@ -53,6 +70,12 @@ namespace DotsProj
             return setbacks;
         }
 
+        /// <summary>
+        /// generate list of lists for street lines 
+        /// corresponding to 
+        /// layer name
+        /// setback distances
+        /// </summary>
         public void GetLayerGeom()
         {
             List<String> names = STREET_NAMES;
@@ -76,6 +99,12 @@ namespace DotsProj
             }
         }
 
+        /// <summary
+        /// <returns> generate list of proc obj with </returns>
+        /// layer name, 
+        /// street lines, 
+        /// setback distance
+        /// </summary>
         public void GenProcObj()
         {
             for (int i = 0; i < STREETLINESPROC.Count; i++)
@@ -88,6 +117,11 @@ namespace DotsProj
             }
         }
 
+
+        /// <summary>
+        /// Gets the proc object li string.
+        /// </summary>
+        /// <returns>The proc object li string.</returns>
         public List<string> GetProcObjLiString()
         {
             List<string> PROCOBJLIStr = new List<string>();

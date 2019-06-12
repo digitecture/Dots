@@ -98,7 +98,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
 
         }
 
-        protected override System.Drawing.Bitmap Icon { get { return null; } }
+        protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgCourtyardExtr; } }
 
         public override Guid ComponentGuid { get { return new Guid("51d6b4bf-b51e-4469-a0f0-2313dfd7542b"); } }
     }
