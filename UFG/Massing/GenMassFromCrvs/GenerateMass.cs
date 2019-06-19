@@ -102,7 +102,7 @@ namespace GenMassFromCrvs
             List<Line> lineLi = new List<Line>();
 
             for(int i=0; i<segLi.Count; i++)
-            {
+            { 
                 Line line = new Line(segLi[i].A, segLi[i].B);
                 lineLi.Add(line);
             }
