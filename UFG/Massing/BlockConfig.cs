@@ -73,7 +73,7 @@ namespace DotsProj
                 Curve c2 = Rhino.Geometry.Curve.ProjectToPlane(c1, Plane.WorldXY);
                 Curve[] c2Offs;
                 Point3d cen = AreaMassProperties.Compute(c2).Centroid;
-                Rhino.Geometry.PointContainment cont = sites[i].Contains(cen);
+                Rhino.Geometry.PointContainment cont = sites[i].Contains(cen,Plane.WorldXY,Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                 if (cont.ToString() == "Inside")
                 {
                     c2Offs = c2.Offset(cen, Vector3d.ZAxis, setback, 0.01, CurveOffsetCornerStyle.Sharp);
