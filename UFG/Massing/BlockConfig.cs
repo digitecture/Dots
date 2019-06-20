@@ -18,19 +18,29 @@ namespace DotsProj
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         { 
+            // 0. Site curve
             pManager.AddCurveParameter("Site Curve", "crv", "sites for placing the blocks", GH_ParamAccess.list);
+            // 1. Setback 
             pManager.AddNumberParameter("Setback", "setback", "setback for the sites", GH_ParamAccess.item);
+            // 2. FSR
             pManager.AddNumberParameter("FSR", "fsr/far", "FSR: floor-space ratio or FAR: floor-area-ratio", GH_ParamAccess.item);
+            // 3. Floor height
             pManager.AddNumberParameter("FLR-HT", "flr-ht", "Floor to floor height (storey)", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Minimum Curve Area", "min-crv-ar", "Minimum area of the curve for Massing", GH_ParamAccess.item);
+            // 4. Restriction : min area of the floor curve
+            pManager.AddNumberParameter("Min-Crv-Area", "min-crv-ar", "Restriction: Minimum area of the curve for Massing", GH_ParamAccess.item);
+            // 5. Restriction : slenderness Ratio
+            pManager.AddNumberParameter("ht/area-1-flr", "ht/area", "Restriction: Slenderness ratio : ht / floor area 1 storey", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            // 0. Extruded Mass
             pManager.AddBrepParameter("output Extruded Mass","Block","extruded mass / blocks",GH_ParamAccess.list);
-            pManager.AddTextParameter("debug","debug","debug numbers",GH_ParamAccess.item);
-            pManager.AddTextParameter("debug2","debug2","debug HT Z",GH_ParamAccess.item);
+            // 1. Floor Curves
             pManager.AddCurveParameter("Floor Curves", "flrs", "Floor curves", GH_ParamAccess.list);
+            // 2. Debug
+            // pManager.AddTextParameter("debug","debug","debug numbers",GH_ParamAccess.item);
+            // pManager.AddTextParameter("debug2","debug2","debug HT Z",GH_ParamAccess.item);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -40,12 +50,14 @@ namespace DotsProj
             double setback = double.NaN;
             double flrHt = double.NaN;
             double minAr=double.NaN;
+            double slendernessRatio = double.NaN;
 
             if (!DA.GetDataList(0, sites)) return;
             if (!DA.GetData(1, ref setback)) return;
             if (!DA.GetData(2, ref fsr)) return;
             if (!DA.GetData(3, ref flrHt)) return;
             if (!DA.GetData(4, ref minAr)) return;
+            if (!DA.GetData(5, ref slendernessRatio)) return;
 
             List<Extrusion> massLi = new List<Extrusion>();
             List<List<Curve>> listFlrCrvLi = new List<List<Curve>>();
@@ -80,7 +92,12 @@ namespace DotsProj
                         double arOffset = AreaMassProperties.Compute(OFFSET_CRV).Area; // 1 floor
                         double num_flrs = fsr * arSite / arOffset;
                         double ht = num_flrs*flrHt;
-                        if(arOffset<=minAr) {
+                        double gotSlendernessRatio = ht / arOffset;
+                        if (gotSlendernessRatio<slendernessRatio)
+                        {
+                            msg += "\nExceeded slenderness ratio";
+                        }
+                        else if(arOffset<=minAr) {
                             msg += "\nar site: " + arSite.ToString() + "\nar offset: " + arOffset.ToString() + "\nht: " + ht.ToString();
                         }
                         else
@@ -111,9 +128,9 @@ namespace DotsProj
             }
 
             DA.SetDataList(0, massLi);
-            DA.SetData(1, msg);
-            DA.SetData(2, MSG);
-            DA.SetDataList(3, flrCrvLi);
+            DA.SetDataList(1, flrCrvLi);
+            // DA.SetData(2, msg);
+            // DA.SetData(3, MSG);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgextrbasic; } }

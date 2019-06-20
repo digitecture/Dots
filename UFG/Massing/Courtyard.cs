@@ -27,6 +27,8 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             pManager.AddNumberParameter("Setback", "setback", "setback required", GH_ParamAccess.item);
             // 4. BAY DEPTH
             pManager.AddNumberParameter("Bay Depth", "bay depth", "max depth of the bay", GH_ParamAccess.item);
+            // 5. Slenderness Ratio
+            pManager.AddNumberParameter("Max ht/floor-area", "ht/area", "Restriction: Slenderness Ratio Total Height / Area of 1 Floor", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -36,7 +38,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             // 1. brep as massing
             pManager.AddBrepParameter("Output Massing Breps", "massing brep", "output massing from floor plates", GH_ParamAccess.list);
             // 2. msg from system
-            pManager.AddTextParameter("debug text 2", "debug 2", "msg from system", GH_ParamAccess.list);
+            // pManager.AddTextParameter("debug text 2", "debug 2", "msg from system", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -46,12 +48,14 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             double flrHt = double.NaN;
             double setback = double.NaN;
             double bayDepth = double.NaN;
+            double slendernessRatio = double.NaN;
 
             if (!DA.GetData(0, ref siteCrv)) return;
             if (!DA.GetData(1, ref fsr)) return;
             if (!DA.GetData(2, ref flrHt)) return;
             if (!DA.GetData(3, ref setback)) return;
             if (!DA.GetData(4, ref bayDepth)) return;
+            if (!DA.GetData(5, ref slendernessRatio)) return;
 
             Curve c0_ = siteCrv.DuplicateCurve();
             Curve c0 = Curve.ProjectToPlane(c0_, Plane.WorldXY);
@@ -63,11 +67,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             try
             {
                 if (innerCrvArr.Length != 1) { debugMsg += "\ninner crv error"; return; }
-                if (outerCrvArr.Length != 1)
-                {
-                    debugMsg += "\nouter crv error";
-                    return;
-                }
+                if (outerCrvArr.Length != 1) { debugMsg += "\nouter crv error"; return; }
                 double siteAr = AreaMassProperties.Compute(siteCrv).Area;
                 double GFA = siteAr * fsr;
                 double outerAr = AreaMassProperties.Compute(outerCrvArr[0]).Area;
@@ -75,7 +75,8 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
                 double netAr = outerAr - innerAr;
                 double numFlrs = GFA / netAr;
                 double reqHt = numFlrs * flrHt;
-
+                double gotSlendernessRatio = reqHt / netAr;
+                if (gotSlendernessRatio < slendernessRatio) return;
                 if (setback > 0 && bayDepth > 0 && flrHt > 0)
                 {
                     List<string> numFlrReqLi = new List<string>();
@@ -125,7 +126,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             {
                 debugMsg += "Error in system";
             }
-            DA.SetDataList(2, debugMsg);
+            // DA.SetDataList(2, debugMsg);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgCourtyardExtr; } }
