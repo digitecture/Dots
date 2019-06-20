@@ -34,9 +34,9 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             // 0. floor plate curves
             pManager.AddCurveParameter("Output Floor Curves", "floors", "output floor plates", GH_ParamAccess.list);
             // 1. brep as massing
-            pManager.AddBrepParameter("Output Massing Breps", "massing", "output massing from floor plates", GH_ParamAccess.list);
+            pManager.AddBrepParameter("Output Massing Breps", "massing brep", "output massing from floor plates", GH_ParamAccess.list);
             // 2. msg from system
-            pManager.AddTextParameter("debug text", "debug", "msg from system", GH_ParamAccess.list);
+            pManager.AddTextParameter("debug text 2", "debug 2", "msg from system", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -59,9 +59,15 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             Curve[] outerCrvArr = c0.Offset(cen, Vector3d.ZAxis, setback, 0.01, CurveOffsetCornerStyle.Sharp);
             Curve[] innerCrvArr = outerCrvArr[0].Offset(cen, Vector3d.ZAxis, bayDepth, 0.01, CurveOffsetCornerStyle.Sharp);
 
-            try{
-                if (innerCrvArr.Length != 1) return;
-                if (outerCrvArr.Length != 1) return;
+            string debugMsg = "";
+            try
+            {
+                if (innerCrvArr.Length != 1) { debugMsg += "\ninner crv error"; return; }
+                if (outerCrvArr.Length != 1)
+                {
+                    debugMsg += "\nouter crv error";
+                    return;
+                }
                 double siteAr = AreaMassProperties.Compute(siteCrv).Area;
                 double GFA = siteAr * fsr;
                 double outerAr = AreaMassProperties.Compute(outerCrvArr[0]).Area;
@@ -98,24 +104,28 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
                     Brep outerBrep = outerMass.ToBrep();
 
                     Extrusion innerMass = Rhino.Geometry.Extrusion.Create(innerCrvArr[0], reqHt, true);
-                    var B2 = outerMass.GetBoundingBox(true);
+                    var B2 = innerMass.GetBoundingBox(true);
                     if (B2.Max.Z < 0.01)
                     {
-                        outerMass = Extrusion.Create(innerCrvArr[0], -reqHt, true);
+                        innerMass = Extrusion.Create(innerCrvArr[0], -reqHt, true);
                     }
                     Brep innerBrep = innerMass.ToBrep();
 
                     Brep[] netBrep = Brep.CreateBooleanDifference(outerBrep, innerBrep, 0.1);
                     try { brepLi.Add(netBrep[0]); }
-                    catch (Exception) { }
-
-
+                    catch (Exception)
+                    {
+                        debugMsg += "Error in brep subtraction";
+                    }
                     DA.SetDataList(0, crvLi);
                     DA.SetDataList(1, brepLi);
-                    DA.SetDataList(2, numFlrReqLi);
                 }
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                debugMsg += "Error in system";
+            }
+            DA.SetDataList(2, debugMsg);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.ufgCourtyardExtr; } }
