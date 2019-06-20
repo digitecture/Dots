@@ -36,7 +36,6 @@ namespace DotsProj
 
             ParcelsFromPolyUtil util = new ParcelsFromPolyUtil();
             List<Curve> iniBspTree = util.GenHalfPlanes(site, poly);
-            //List<Curve> fBspTree = util.RemovePoly(iniBspTree, poly);
 
             DA.SetDataList(0, iniBspTree);
         }

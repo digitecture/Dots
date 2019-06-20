@@ -45,16 +45,18 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             Curve siteCrv = null;
             double fsr = double.NaN;
             double flrHt = double.NaN;
-            string stepbackstr = "";
-            string htstr = "";
+            string stepbackstr = "2,3,4";
+            string htstr = "2,3,4";
             List<double> stepbackLi = new List<double>();
             List<double> htLi = new List<double>();
 
             if (!DA.GetData(0, ref siteCrv)) return;
             if (!DA.GetData(1, ref fsr)) return;
             if (!DA.GetData(2, ref flrHt)) return;
-            if (!DA.GetData(3, ref stepbackstr)) return;
-            if (!DA.GetData(4, ref htstr)) return;
+            // if (!DA.GetData(3, ref stepbackstr)) return;
+            // if (!DA.GetData(4, ref htstr)) return;
+            bool t0 = DA.GetData(3, ref stepbackstr);
+            bool t1 = DA.GetData(3, ref htstr);
 
             string[] stepbackArr = stepbackstr.Split(',');
             for(int i=0; i<stepbackArr.Length; i++)
@@ -74,34 +76,47 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             List<Curve> flrCrvLi = new List<Curve>();
             double spineht = 0.0;
             double flrItr = 0.0;
-            for(int i=0; i<stepbackLi.Count; i++)
+            try
             {
-                Curve c0 = siteCrv.DuplicateCurve();
-                Point3d cen = AreaMassProperties.Compute(c0).Centroid;
-                double di = stepbackLi[i];
-                Curve[] c1 = c0.Offset(cen, Vector3d.ZAxis, di, 0.01, CurveOffsetCornerStyle.Sharp);
-                double ht = htLi[i];
-                double numFlrs = ht / flrHt;
-                for(int j=0; j<numFlrs; j++)
+                for (int i = 0; i < stepbackLi.Count; i++)
                 {
-                    Curve c2 = c1[0].DuplicateCurve();
-                    Rhino.Geometry.Transform xform_itr = Rhino.Geometry.Transform.Translation(0,0,flrItr);
-                    c2.Transform(xform_itr);
-                    flrCrvLi.Add(c2);
-                    flrItr += flrHt;
+                    Curve c0_ = siteCrv.DuplicateCurve();
+                    Curve c0 = Rhino.Geometry.Curve.ProjectToPlane(c0_, Plane.WorldXY);
+                    Point3d cen = AreaMassProperties.Compute(c0).Centroid;
+                    double di = stepbackLi[i];
+                    Curve[] c1 = c0.Offset(cen, Vector3d.ZAxis, di, 0.01, CurveOffsetCornerStyle.Sharp);
+                    if (c1.Length != 1) return;
+                    double ht = htLi[i];
+                    double numFlrs = ht / flrHt;
+                    for (int j = 0; j < numFlrs; j++)
+                    {
+                        Curve c2_ = c1[0].DuplicateCurve();
+                        Curve c2 = Curve.ProjectToPlane(c2_, Plane.WorldXY);
+                        Rhino.Geometry.Transform xform_itr = Rhino.Geometry.Transform.Translation(0, 0, flrItr);
+                        c2.Transform(xform_itr);
+                        flrCrvLi.Add(c2);
+                        flrItr += flrHt;
+                    }
+                    flrReqLi.Add(numFlrs.ToString());
+                    Extrusion mass = Rhino.Geometry.Extrusion.Create(c1[0], ht, true);
+                    var B = mass.GetBoundingBox(true);
+                    if (B.Max.Z < 0.01)
+                    {
+                        mass = Extrusion.Create(c1[0], -ht, true);
+                    }
+                    Brep brep = mass.ToBrep();
+                    Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0, 0, spineht);
+                    brep.Transform(xform);
+                    brepLi.Add(brep);
+                    //crvLi.Add(c1[0]);
+                    spineht += ht;
                 }
-                flrReqLi.Add(numFlrs.ToString());
-                Brep brep = Rhino.Geometry.Extrusion.Create(c1[0], -ht, true).ToBrep();
-                Rhino.Geometry.Transform xform = Rhino.Geometry.Transform.Translation(0, 0, spineht);
-                brep.Transform(xform);
-                brepLi.Add(brep);
-                //crvLi.Add(c1[0]);
-                spineht += ht;
-            }
 
-            DA.SetDataList(0, flrCrvLi);
-            DA.SetDataList(1, brepLi);
-            DA.SetDataList(2, flrReqLi);
+                DA.SetDataList(0, flrCrvLi);
+                DA.SetDataList(1, brepLi);
+                DA.SetDataList(2, flrReqLi);
+            }
+            catch (Exception) { }
         }
 
         protected override System.Drawing.Bitmap Icon

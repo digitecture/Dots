@@ -2,7 +2,7 @@
 using System.Drawing;
 using Grasshopper.Kernel;
 
-namespace GenMassFromCrvs
+namespace DotsProj
 {
     public class GenMassFromCrvsInfo : GH_AssemblyInfo
     {
@@ -17,7 +17,7 @@ namespace GenMassFromCrvs
         {
             get
             {
-                return Properties.Resources.proj_icon;
+                return Properties.Resources.genCrvs;
             }
         }
         public override string Description

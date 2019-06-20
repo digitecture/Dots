@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Rhino;
 using Rhino.Geometry;
 
-namespace GenMassFromCrvs
+namespace DotsProj
 {
     class Seg
     {

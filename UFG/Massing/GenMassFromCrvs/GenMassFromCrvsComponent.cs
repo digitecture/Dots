@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
-namespace GenMassFromCrvs
+namespace DotsProj
 {
     public class GenMassFromCrvsComponent : GH_Component
     {
@@ -27,6 +27,7 @@ namespace GenMassFromCrvs
             pManager.AddNumberParameter("Minimum Fsr", "min-fsr/far", "enter the minimum FSR required", GH_ParamAccess.item);
             pManager.AddNumberParameter("Maximum Fsr", "max-fsr/far", "enter the maximum FSR required", GH_ParamAccess.item);
             pManager.AddNumberParameter("Flr-Flr Ht", "flr-ht", "enter the floor to floor height", GH_ParamAccess.item);
+            pManager.AddNumberParameter("bridge-depth", "bridge-depth", "enter the bridge depth", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -35,7 +36,7 @@ namespace GenMassFromCrvs
             pManager.AddTextParameter("debug", "debug", "debug", GH_ParamAccess.list);
             pManager.AddCurveParameter("Base flr curves", "base-flr-crvs", "base floor curves", GH_ParamAccess.list);
             pManager.AddPointParameter("Input curve points", "inp-pts", "Points of the input curves", GH_ParamAccess.list);
-            pManager.AddLineParameter("Bridges between crvs", "lines", "Two bridegs of the input curves", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Bridges between crvs", "lines", "Two bridges of the input curves", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -49,6 +50,7 @@ namespace GenMassFromCrvs
             double MinFsrInp = double.NaN;
             double MaxFsrInp = double.NaN;
             double FlrHt = double.NaN;
+            double BridgeDepth = double.NaN;
 
             if (!DA.GetDataList(1, BaseCrvsInp)) return;
             if (!DA.GetData(0, ref SITE)) return;
@@ -59,45 +61,44 @@ namespace GenMassFromCrvs
             if (!DA.GetData(6, ref MinFsrInp)) return;
             if (!DA.GetData(7, ref MaxFsrInp)) return;
             if (!DA.GetData(8, ref FlrHt)) return;
+            if (!DA.GetData(9, ref BridgeDepth)) return;
 
             double SiteAr = AreaMassProperties.Compute(SITE).Area;
             double minFsr = Math.Round((SiteAr * MinFsrInp), 2);
             double maxFsr = Math.Round((SiteAr * MaxFsrInp), 2);
             GenerateMass genMass = new GenerateMass(SITE, SiteAr, minFsr, maxFsr,
-            NumBaseFlrsInp, NumMidFlrsInp, NumBridgeFlrsInp, NumTowerFlrsInp, BaseCrvsInp, FlrHt);
+            NumBaseFlrsInp, NumMidFlrsInp, NumBridgeFlrsInp, NumTowerFlrsInp, 
+            BaseCrvsInp, FlrHt, BridgeDepth);
 
             List<Curve> baseFlrCrvs= new List<Curve>();
             List<Point3d> ptList = new List<Point3d>();
             List<List<Point3d>> ListPointList = new List<List<Point3d>>();
-            List<Line> bridges;
+            List<Curve> bridges;
             string debugMsg = "";
             try
             {
                 genMass.GenBaseCrvFloors();
                 baseFlrCrvs= genMass.BaseFlrCrvs;
                 ListPointList = genMass.BaseCrvPts;
-                for(int i=0; i<ListPointList.Count; i++)
-                {
-                    for (int j=0; j<ListPointList[i].Count; j++)
-                    {
-                        ptList.Add(ListPointList[i][j]);
-                    }
-                }
+
+                
+
                 debugMsg = genMass.ToString();
                 bridges = genMass.GenBridge();
+                ptList = genMass.BridgeCrvPts;
 
                 DA.SetDataList(2, baseFlrCrvs);
                 DA.SetDataList(3, ptList);
                 DA.SetDataList(4, bridges);
+
                 DA.SetData(0, debugMsg);
             }
             catch (Exception) { }
-            
         }
 
         protected override System.Drawing.Bitmap Icon
         {
-            get { return Properties.Resources.proj_icon; }
+            get { return Properties.Resources.genCrvs; }
         }
 
         public override Guid ComponentGuid

@@ -89,7 +89,8 @@ namespace DotsProj
                 for(int j=0; j<used_crv.Count; j++) { bsp_tree.Remove(used_crv[j]); }
 
             }
-            return bsp_tree;
+            List<Curve> f_bsp_tree = RemovePoly(bsp_tree, int_crv);
+            return f_bsp_tree;
         }
 
 
@@ -102,7 +103,7 @@ namespace DotsProj
                 {
                     Point3d cen = AreaMassProperties.Compute(bsp_tree[i]).Centroid;
                     PointContainment t=bsp_tree[i].Contains(cen, Plane.WorldXY, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-                    if (t.ToString().Equals("Inside"))
+                    if (t.ToString()==("Inside"))
                     {
                         del_crv.Add(bsp_tree[i]);
                     }
