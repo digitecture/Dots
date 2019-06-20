@@ -28,7 +28,7 @@ namespace DotsProj
             // 2. offset input
             pManager.AddNumberParameter("OFFSET_INP", "OFFSET_INP", "OFFSET_INP", GH_ParamAccess.item);
             // 3. number of sub-divisions
-            pManager.AddIntegerParameter("number of divisions", "div", "number of divisions of the site curve", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("number of divisions - per seg (poly) & overall (smooth curves)", "div", "number of divisions of the site curve: if smooth, provide overall, else (if poly) provide num/seg", GH_ParamAccess.item);
             // 4. num peaks
             pManager.AddIntegerParameter("number of Peaks", "peaks", "number of Peaks of the site curve", GH_ParamAccess.item);
             // 5. min area of curve
@@ -110,18 +110,66 @@ namespace DotsProj
 
             if (t0 == true)
             {
-                
+                List<Point3d> outerPtLi = new List<Point3d>();
+                IEnumerator<Point3d> outerPts = outer_crv.GetEnumerator();
+                while (outerPts.MoveNext())
+                {
+                    outerPtLi.Add(outerPts.Current);
+                }
+                List<Point3d> innerPtLi = new List<Point3d>();
+                IEnumerator<Point3d> innerPts = inner_crv.GetEnumerator();
+                while (innerPts.MoveNext())
+                {
+                    innerPtLi.Add(innerPts.Current);
+                }
 
+                PolylineCurve outerPoly = new PolylineCurve(outerPtLi);
+
+                double t = (double)(1.00 / numDiv);
+                if (t < 1.0  && t > 0.05)
+                {
+                    int numDivisionPts = (int)numDiv;
+                    fbrepLi = SolveForPolyLineCrv(outerPtLi, innerPtLi, numDivisionPts, numPeaks, OFFSET_INP);
+                }
+                
             }
             else
             {
                 fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numPeaks, OFFSET_INP);
             }
-            DA.SetDataList(5, fbrepLi); // ----------------------------------------------
+            DA.SetDataList(4, (1/numDiv).ToString());       // ----------------------------------------------
+            DA.SetDataList(5, fbrepLi);       // ----------------------------------------------
             DA.SetDataList(1, globalPtCrvLi); // ----------------------------------------------
         }
 
-        public void SolveForPolyLineCrv() { }
+        public List<Brep> SolveForPolyLineCrv(List<Point3d> outerPtLi, List<Point3d> innerPtLi,  int numDiv, int numPeaks, double offset_inp)
+        {
+            globalPtCrvLi = new List<Point3d>();
+            for (int i = 0; i < outerPtLi.Count - 1; i++)
+            {
+                Point3d p = outerPtLi[i];
+                Point3d q = outerPtLi[i + 1];
+                Point3d a = innerPtLi[i];
+                Point3d b = innerPtLi[i + 1];
+                double t = (double)(1.00 / numDiv);
+                for (double j = 0.0; j < 1.0; j += t)
+                {
+                    double x = a.X + (b.X - a.X) * j;
+                    double y = a.Y + (b.Y - a.Y) * j;
+                    Point3d A = new Point3d(x, y, 0); //a+j*(b-a)
+                    globalPtCrvLi.Add(A);
+                }
+                for (double j = 0.0; j < 1.0; j += t)
+                {
+                    double x = p.X + (q.X - p.X) * j;
+                    double y = p.Y + (q.Y - p.Y) * j;
+                    Point3d A = new Point3d(x, y, 0); //a+j*(b-a)
+                    globalPtCrvLi.Add(A);
+                }
+            }
+            List<Brep> fBrepLi = new List<Brep>();
+            return fBrepLi;
+        }
 
         public List<Brep> SolveForSmoothCrv(Curve c2, Curve OFFSET_CRV, int numDiv, int numPeaks, double OFFSET_INP) {
             globalPtCrvLi = new List<Point3d>();
