@@ -90,7 +90,7 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
                         c0crv.Transform(xform);
                         c1crv.Transform(xform);
                         crvLi.Add(c0crv);
-                        crvLi.Add(c1crv);
+                        crvLi.Add(c1crv);    
                         flrCounter += flrHt;
                     }
                     numFlrReqLi.Add(flrCounter.ToString());

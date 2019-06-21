@@ -6,10 +6,10 @@ using Rhino.Geometry;
 
 namespace DotsProj
 {
-    public class GenMassFromCrvsComponent : GH_Component
+    public class GenMassFromCrvs : GH_Component
     {
 
-        public GenMassFromCrvsComponent()
+        public GenMassFromCrvs()
           : base("Massing", "mass",
               "Generate Building Masses From Curves",
               "DOTS", "Massing")
@@ -81,8 +81,6 @@ namespace DotsProj
                 baseFlrCrvs= genMass.BaseFlrCrvs;
                 ListPointList = genMass.BaseCrvPts;
 
-                
-
                 debugMsg = genMass.ToString();
                 bridges = genMass.GenBridge();
                 ptList = genMass.BridgeCrvPts;
@@ -103,7 +101,7 @@ namespace DotsProj
 
         public override Guid ComponentGuid
         {
-            get { return new Guid("2d3ed8b9-6552-4992-84b6-5a72b31e0d5c"); }
+            get { return new Guid("ce1daa3c-24ba-427b-8053-1a6bf98a1f1a"); }
         }
     }
 }

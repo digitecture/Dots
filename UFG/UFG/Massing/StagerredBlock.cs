@@ -140,7 +140,8 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
             }
             double siteAr = AreaMassProperties.Compute(siteCrv).Area;
             double gotfsr = grossFlrAr / siteAr;
-            outputMsg = "Gross Floor Area = " + Math.Round(grossFlrAr, 2).ToString() + ", Got fsr / far = " + Math.Round(gotfsr, 2).ToString();
+            outputMsg = "Gross Floor Area = " + Math.Round(grossFlrAr, 2).ToString() + 
+                ", Got fsr / far = " + Math.Round(gotfsr, 2).ToString();
             DA.SetData(2, outputMsg);
             DA.SetDataList(3, flrReqLi);
         }
