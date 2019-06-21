@@ -124,27 +124,37 @@ namespace DotsProj
                 }
 
                 PolylineCurve outerPoly = new PolylineCurve(outerPtLi);
-
-                double t = (double)(1.00 / numDiv);
-                if (t < 1.0  && t > 0.05)
+                try
                 {
-                    int numDivisionPts = (int)numDiv;
-                    fbrepLi = SolveForPolyLineCrv(outerPtLi, innerPtLi, numDivisionPts, numPeaks, OFFSET_INP);
+                    double t = (double)(1.00 / numDiv);
+                    if (t < 1.0 && t > 0.005)
+                    {
+                        int numDivisionPts = (int)numDiv;
+                        fbrepLi = SolveForPolyLineCrv(outerPtLi, innerPtLi, numDivisionPts, numPeaks, OFFSET_INP);
+                    }
                 }
+                catch (Exception) { }
+                
                 
             }
             else
             {
-                fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numPeaks, OFFSET_INP);
+                try
+                {
+                    fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numPeaks, OFFSET_INP);
+                }
+                catch (Exception) { }
+                
             }
             DA.SetDataList(4, (1/numDiv).ToString());       // ----------------------------------------------
-            DA.SetDataList(5, fbrepLi);       // ----------------------------------------------
-            DA.SetDataList(1, globalPtCrvLi); // ----------------------------------------------
+            DA.SetDataList(5, fbrepLi);                     // ----------------------------------------------
+            DA.SetDataList(1, globalPtCrvLi);               // ----------------------------------------------
         }
 
         public List<Brep> SolveForPolyLineCrv(List<Point3d> outerPtLi, List<Point3d> innerPtLi,  int numDiv, int numPeaks, double offset_inp)
         {
             globalPtCrvLi = new List<Point3d>();
+            List<PolylineCurve> polyLi = new List<PolylineCurve>();
             for (int i = 0; i < outerPtLi.Count - 1; i++)
             {
                 Point3d p = outerPtLi[i];
@@ -152,12 +162,15 @@ namespace DotsProj
                 Point3d a = innerPtLi[i];
                 Point3d b = innerPtLi[i + 1];
                 double t = (double)(1.00 / numDiv);
+                List<Point3d> inner_subLi = new List<Point3d>();
+                List<Point3d> outer_subLi = new List<Point3d>();
                 for (double j = 0.0; j < 1.0; j += t)
                 {
                     double x = a.X + (b.X - a.X) * j;
                     double y = a.Y + (b.Y - a.Y) * j;
                     Point3d A = new Point3d(x, y, 0); //a+j*(b-a)
                     globalPtCrvLi.Add(A);
+                    inner_subLi.Add(A);
                 }
                 for (double j = 0.0; j < 1.0; j += t)
                 {
@@ -165,16 +178,36 @@ namespace DotsProj
                     double y = p.Y + (q.Y - p.Y) * j;
                     Point3d A = new Point3d(x, y, 0); //a+j*(b-a)
                     globalPtCrvLi.Add(A);
+                    outer_subLi.Add(A);
+                }
+                for(int j=0; j<outer_subLi.Count-1; j++)
+                {
+                    Point3d A = inner_subLi[j];
+                    Point3d B = inner_subLi[j + 1];
+                    Point3d P = outer_subLi[j];
+                    Point3d Q = outer_subLi[j + 1];
+                    List<Point3d> pts = new List<Point3d> { A, B, Q, P, A };
+                    PolylineCurve poly = new PolylineCurve(pts);
+                    polyLi.Add(poly);
                 }
             }
+
             List<Brep> fBrepLi = new List<Brep>();
+            for (int i=0; i<polyLi.Count; i++)
+            {
+                PolylineCurve poly = polyLi[i];
+                Extrusion extr = Rhino.Geometry.Extrusion.Create(poly, 10, true);
+                Brep brep = extr.ToBrep();
+                fBrepLi.Add(brep);
+            }
+
             return fBrepLi;
         }
 
         public List<Brep> SolveForSmoothCrv(Curve c2, Curve OFFSET_CRV, int numDiv, int numPeaks, double OFFSET_INP) {
             globalPtCrvLi = new List<Point3d>();
             double[] p = c2.DivideByCount(numDiv, true);
-            List<Point3d> ptLi = new List<Point3d>(); // points on the site boundary
+            List<Point3d> ptLi = new List<Point3d>();         // points on the site boundary
             for (int i = 0; i < p.Length; i++)
             {
                 Point3d pts = c2.PointAt(p[i]);
@@ -209,17 +242,17 @@ namespace DotsProj
                 double ey2 = P.Y - (Q.X - P.X) * sc * sc2;
                 Point3d u2 = new Point3d(dx2, dy2, 0);
                 Point3d v2 = new Point3d(ex2, ey2, 0);
-                Rhino.Geometry.PointContainment contU = c2.Contains(u, Plane.WorldXY, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
-                LineCurve linePu = new LineCurve();
+                Rhino.Geometry.PointContainment contU = c2.Contains(u);//, Plane.WorldXY, Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
                 if (contU.ToString() == "Inside")
                 {
-                    linePu = new LineCurve(P, u2);
+                    LineCurve linePu = new LineCurve(P, u2);
+                    lineLi.Add(linePu);
                 }
                 else
                 {
-                    linePu = new LineCurve(P, v2);
+                    LineCurve linePu = new LineCurve(P, v2);
+                    lineLi.Add(linePu);
                 }
-                lineLi.Add(linePu);
             }
 
             // FIND INTX - NORMAL x SETBACK CURVE; REMOVE OTHER NORMALS
