@@ -22,6 +22,7 @@ namespace DotsProj
         private double baseFsr;
         private double towerFsr;
         private double SITE_AR;
+        private double minTowerAr = double.NaN;
 
         public List<Curve> globalBaseCrvLi { get; set; } // global parameter
         public List<Curve> globalTowerCrvLi { get; set; } // global parameter
@@ -32,7 +33,8 @@ namespace DotsProj
         public SmoothCurveSolver() { }
 
         public SmoothCurveSolver(Curve c2_, Curve OFFSET_CRV_, int numDiv_, int numTowers_,
-            double flrHt_, double OFFSET_INP_, double baseFsr_, double towerFsr_, double site_ar_)
+            double flrHt_, double OFFSET_INP_, double baseFsr_, double towerFsr_, 
+            double site_ar_, double min_tower_ar_)
         {
             this.c2 = c2_;
             this.OFFSET_CRV = OFFSET_CRV_;
@@ -43,6 +45,7 @@ namespace DotsProj
             this.baseFsr = baseFsr_;
             this.towerFsr = towerFsr_;
             this.SITE_AR = site_ar_;
+            this.minTowerAr = min_tower_ar_;
         }
 
         public List<Brep> Compute()
@@ -130,7 +133,12 @@ namespace DotsProj
                     Point3d b1 = B.PointAtEnd;
                     Point3d[] pts = { a0, b0, b1, a1, a0 };
                     PolylineCurve poly = new PolylineCurve(pts);
-                    polyCrvLi.Add(poly);
+                    double ar2 = AreaMassProperties.Compute(poly).Area;
+                    if (ar2 > minTowerAr)
+                    {
+                        polyCrvLi.Add(poly);
+                    }
+                    //polyCrvLi.Add(poly);
                 }
                 else
                 {
@@ -142,7 +150,12 @@ namespace DotsProj
                     Point3d b1 = B.PointAtEnd;
                     Point3d[] pts = { a0, b0, b1, a1, a0 };
                     PolylineCurve poly = new PolylineCurve(pts);
-                    polyCrvLi.Add(poly);
+                    double ar2 = AreaMassProperties.Compute(poly).Area;
+                    if (ar2 > minTowerAr)
+                    {
+                        polyCrvLi.Add(poly);
+                    }
+                    //polyCrvLi.Add(poly);
                 }
             }
             double baseExtrHt = 0.0;
@@ -206,11 +219,11 @@ namespace DotsProj
             for (int i = 0; i < fPolyLi.Count; i++)
             {
                 PolylineCurve crv = fPolyLi[i];
-                Extrusion extr0 = Extrusion.Create(crv, -towerHtReq * 3, true);
+                Extrusion extr0 = Extrusion.Create(crv, -towerHtReq * flrHt, true);
                 var t0 = extr0.GetBoundingBox(true);
                 if (t0.Max.Z <= 0)
                 {
-                    extr0 = Extrusion.Create(crv, towerHtReq * 3, true);
+                    extr0 = Extrusion.Create(crv, towerHtReq * flrHt, true);
                 }
                 Brep brep = extr0.ToBrep();
                 Transform xform = Rhino.Geometry.Transform.Translation(0, 0, baseExtrHt);

@@ -44,8 +44,10 @@ namespace DotsProj
             pManager.AddNumberParameter("base FSR (FAR)", "base-fsr", "required FSR of the base", GH_ParamAccess.item);
             // 7. tower fsr
             pManager.AddNumberParameter("tower FSR (FAR)", "tower-fsr", "required FSR of the tower", GH_ParamAccess.item);
-            // 8. min area of curve
-            pManager.AddNumberParameter("minimum-area-crv", "min-ar-curve", "Restraint: Minimum area if the curve", GH_ParamAccess.item);
+            // 8. min area of site curve
+            pManager.AddNumberParameter("minimum-area-site-crv", "min-ar-site-curve", "Restraint: Minimum area of the site curve", GH_ParamAccess.item);
+            // 9. min area of tower curve
+            pManager.AddNumberParameter("minimum-area-tower-crv", "min-ar-tower-curve", "Restraint: Minimum area of the tower curve", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -74,7 +76,8 @@ namespace DotsProj
             int numDiv = 10;
             int numTowers= 7;
             double flrHt = double.NaN;
-            double minAr = double.NaN;
+            double minSiteAr = double.NaN;
+            double minTowerAr = double.NaN;
 
             if (!DA.GetData(0, ref site_)) return;
             if (!DA.GetData(1, ref setback)) return;
@@ -84,7 +87,8 @@ namespace DotsProj
             if (!DA.GetData(5, ref flrHt)) return;
             if (!DA.GetData(6, ref baseFsr)) return;
             if (!DA.GetData(7, ref towerFsr)) return;
-            if (!DA.GetData(8, ref minAr)) return;
+            if (!DA.GetData(8, ref minSiteAr)) return;
+            if (!DA.GetData(9, ref minTowerAr)) return;
 
             Curve site = Rhino.Geometry.Curve.ProjectToPlane(site_, Plane.WorldXY);
 
@@ -94,7 +98,7 @@ namespace DotsProj
             double siteAr = AreaMassProperties.Compute(site).Area;
             SITE_AR= AreaMassProperties.Compute(site).Area;
             Point3d site_cen = AreaMassProperties.Compute(site).Centroid;
-            if (siteAr < minAr) return; // area restraint
+            if (siteAr < minSiteAr) return; // area restraint
             Curve[] site_setback_crv = site.Offset(site_cen, Vector3d.ZAxis, setback,
                 Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance, CurveOffsetCornerStyle.Sharp);
             if (site_setback_crv.Length != 1) return; // rational offset restraint
@@ -123,7 +127,7 @@ namespace DotsProj
             bool t0 = c2.TryGetPolyline(out outer_crv);
             bool t1 = OFFSET_CRV.TryGetPolyline(out inner_crv);
             List<Brep> fbrepLi = new List<Brep>();
-            if (t0 == true)
+            if (t0 == true && SITE_AR>minSiteAr)
             {
                 debugMsg += "in poly solver";
                 List<Point3d> outerPtLi = new List<Point3d>();
@@ -145,30 +149,25 @@ namespace DotsProj
                 {
                     int numDivisionPts = (int)numDiv;
                     fbrepLi = SolveForPolyLineCrv(outerPtLi, innerPtLi, numDivisionPts, numTowers,
-                        flrHt, OFFSET_INP, baseFsr, towerFsr);
+                        flrHt, OFFSET_INP, baseFsr, towerFsr, minTowerAr);
                 }
             }
             else
             {
-                debugMsg += "in smooth solver";
-                try
+                if (SITE_AR > minSiteAr)
                 {
-                    //fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numTowers, flrHt, OFFSET_INP, baseFsr, towerFsr);
+                    fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numTowers, 
+                        flrHt, OFFSET_INP, baseFsr, towerFsr, minTowerAr);
                 }
-                catch (Exception) {
-                    debugMsg += "error in smooth solver";
-                }
-                fbrepLi = SolveForSmoothCrv(c2, OFFSET_CRV, numDiv, numTowers, flrHt, OFFSET_INP, baseFsr, towerFsr);
             }
             DA.SetDataList(4, debugMsg);       // ----------------------------------------------
             DA.SetDataList(5, fbrepLi);                     // ----------------------------------------------
-            //DA.SetDataList(1, globalPtCrvLi);               // ----------------------------------------------
             DA.SetDataList(1, globalBaseCrvLi);
             DA.SetDataList(2, globalTowerCrvLi);
         }
 
         public List<Brep> SolveForPolyLineCrv(List<Point3d> outerPtLi, List<Point3d> innerPtLi,  
-            int numDiv, int numTowers, double flrHt, double offset_inp, double baseFsr, double towerFsr)
+            int numDiv, int numTowers, double flrHt, double offset_inp, double baseFsr, double towerFsr, double minTowerAr)
         {
 
             globalBaseCrvLi = new List<Curve>();
@@ -176,7 +175,7 @@ namespace DotsProj
             globalPtCrvLi = new List<Point3d>();
 
             PolyCurveSolver solver = new PolyCurveSolver(outerPtLi, innerPtLi, 
-                numDiv, numTowers, flrHt, offset_inp, baseFsr, towerFsr, SITE_AR);
+                numDiv, numTowers, flrHt, offset_inp, baseFsr, towerFsr, SITE_AR, minTowerAr);
             
             //run the computations
             solver.Compute(); //updates global variables
@@ -188,10 +187,10 @@ namespace DotsProj
         }
 
         public List<Brep> SolveForSmoothCrv(Curve c2, Curve OFFSET_CRV, int numDiv, int numTowers, 
-            double flrHt, double OFFSET_INP, double baseFsr, double towerFsr) {
+            double flrHt, double OFFSET_INP, double baseFsr, double towerFsr, double minTowerAr) {
 
             SmoothCurveSolver solver = new SmoothCurveSolver(c2, OFFSET_CRV, numDiv, numTowers, 
-                flrHt, OFFSET_INP, baseFsr, towerFsr, SITE_AR);
+                flrHt, OFFSET_INP, baseFsr, towerFsr, SITE_AR, minTowerAr);
 
             List<Brep> fbrepLi = solver.Compute();
             globalBaseCrvLi = new List<Curve>();
