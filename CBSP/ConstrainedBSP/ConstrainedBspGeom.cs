@@ -3,15 +3,19 @@ using System.Collections.Generic;
 
 using Grasshopper;
 using Grasshopper.Kernel;
+
+using Rhino;
 using Rhino.Geometry;
 
 namespace DotsProj
 {
     public class GenCBspGeom
     {
+        private Curve SITE_CRV;
+        public List<string> AdjObjLi { get; set; }
+        public List<GeomObj> GeomEntryObjLi { get; set; }
 
-        private List<string> AdjObjLi;
-        private List<GeomEntry> GeomEntryObjLi;
+        public List<GeomObj> NormGeomObjLi { get; set; }
 
         private List<Polyline> fPolys = new List<Polyline>();
         private List<PolylineCurve> fPolyCrv = new List<PolylineCurve>();
@@ -20,11 +24,31 @@ namespace DotsProj
 
         public GenCBspGeom() { }
 
-        public GenCBspGeom(List<string> adjObjLi_, List<GeomEntry>geomEntryObjLi_)
+        public GenCBspGeom(Curve site_crv, List<string> adjObjLi_, List<GeomObj> geomEntryObjLi_)
         {
+            SITE_CRV = site_crv;
             AdjObjLi = adjObjLi_;
             GeomEntryObjLi = geomEntryObjLi_;
+            NormalizeGeomObj();
         }
+
+        public void NormalizeGeomObj()
+        {
+            double siteAr = AreaMassProperties.Compute(SITE_CRV).Area;
+            double sum_ar = 0.0;
+            for (int i = 0; i < GeomEntryObjLi.Count; i++)
+            {
+                sum_ar += GeomEntryObjLi[i].Area2;
+            }
+            NormGeomObjLi = new List<GeomObj>();
+            for (int i = 0; i < GeomEntryObjLi.Count; i++)
+            {
+                GeomObj obj = GeomEntryObjLi[i];
+                obj.Area2 = obj.Area2 * siteAr / sum_ar;
+                NormGeomObjLi.Add(obj);
+            }
+        }
+
 
         public List<PolylineCurve> GetFPolys()
         {
@@ -35,14 +59,14 @@ namespace DotsProj
             return rVal;
         }
 
-        public Polyline GenerateInitialCurve(List<GeomEntry> geomobjli)
+        public Polyline GenerateInitialCurve(List<GeomObj> geomobjli)
         {
 
             double sum = 0.0;
             for (int i = 0; i < geomobjli.Count; i++)
             {
-                double ar = geomobjli[i].getArea();
-                int num = geomobjli[i].getNumber();
+                double ar = geomobjli[i].Area2;
+                int num = geomobjli[i].Number;
                 sum += (ar * num);
             }
             double di = Math.Sqrt(sum);

@@ -37,7 +37,7 @@ namespace DotsProj
             string[] W = input.Split(',');
             for (int i = 0; i < W.Length; i++)
             {
-                names.Add(W[i].Trim().ToUpper());
+                names.Add(W[i].Trim().ToLower());
             }
             return names;
         }

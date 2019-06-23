@@ -18,7 +18,10 @@ namespace DotsProj
 
         private List<string> adjObjLi;
         private List<string> geomObjLiStr;
-        private List<GeomEntry> geomObjLi;
+        private List<GeomObj> geomObjLi;
+
+        private List<GeomObj> norGeomLi;
+        public List<string> norGeomObjLiStr { get; set; }
 
         public CsvParser(){}
 
@@ -60,19 +63,25 @@ namespace DotsProj
             return adjObjLi;
         }
 
-        public List<string> GetGeomObjLi (List<string> geomstrList)
+        public List<string> GetGeomObjLi(List<string> geomstrList, double site_ar)
         {
             geomObjLiStr = new List<string>();
-            geomObjLi = new List<GeomEntry>();
-            MakeGeomObjList obj = new MakeGeomObjList(geomstrList);
+            MakeGeomObjList obj = new MakeGeomObjList(geomstrList, site_ar);
             geomObjLiStr = obj.GetGeomObjListStr(); // file: MakeGeomObjList-string
-            geomObjLi = obj.GetGeomObj(); // file : MakeGeomObjList-object
-            return geomObjLiStr;
-        }
 
-        public List<GeomEntry> GetGeomObjLi()
-        {
-            return geomObjLi;
+
+            geomObjLi = new List<GeomObj>();
+            geomObjLi = obj.GetGeomObj(); // file : MakeGeomObjList-object
+
+            norGeomLi = new List<GeomObj>();
+            norGeomLi = obj.NormalizeGeomObj(geomObjLi, site_ar); // file : MakeGeomObjList-object
+
+            norGeomObjLiStr = new List<string>();
+            for (int i = 0; i < norGeomLi.Count; i++) {
+                string s = norGeomLi[i].ToString();
+                norGeomObjLiStr.Add(s);
+            }
+            return geomObjLiStr;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace DotsProj
         List<string> geomSpaceStr = new List<String>(); // functional space - geometric requirements
         List<string> adjObjLi = new List<string>();     // final adj obj list
         List<string> geomObjLiStr = new List<string>(); // final geom object list as string
-        List<GeomEntry> geomObjLi = new List<GeomEntry>();
+        List<GeomObj> geomObjLi = new List<GeomObj>();
 
         public CBSP()
           : base("cbsp", "input-CBSP",
@@ -26,7 +26,11 @@ namespace DotsProj
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+            // 0. 
+            pManager.AddCurveParameter("Input Site Geometry", "input site", "Select the input site geometry", GH_ParamAccess.item);
+            // 1. adjacency list path
             pManager.AddTextParameter("File Path Adjacency", "iAdjacencyPath", "adjacency matrix: csv file", GH_ParamAccess.item);
+            // 2. geometric list path
             pManager.AddTextParameter("File Path Geometry", "iGeomPath", "geometric requirements: csv file", GH_ParamAccess.item);
         }
 
@@ -50,11 +54,15 @@ namespace DotsProj
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            Curve SITE_CRV = null;
             string adjFilePath = "null";
             string geomFilePath = "null";
 
-            DA.GetData(0, ref adjFilePath);
-            DA.GetData(1, ref geomFilePath);
+            if(!DA.GetData(0, ref SITE_CRV)) return;
+            if(!DA.GetData(1, ref adjFilePath)) return;
+            if(!DA.GetData(2, ref geomFilePath)) return;
+
+            double SITE_AREA = AreaMassProperties.Compute(SITE_CRV).Area;
 
             CsvParser csvParserAdj = new CsvParser(adjFilePath);
             adjMatrixStr = csvParserAdj.readFile(); // list of strings - not fields
@@ -62,25 +70,24 @@ namespace DotsProj
 
             CsvParser csvParserGeom = new CsvParser(geomFilePath);
             geomSpaceStr = csvParserGeom.readFile(); // list of strings - not fields
-            geomObjLiStr = csvParserGeom.GetGeomObjLi(geomSpaceStr); // overloaded: list of geom objs
-            List<GeomEntry> geomObjLi = csvParserGeom.GetGeomObjLi();
+            List<string> geomObjStr=csvParserGeom.GetGeomObjLi(geomSpaceStr, SITE_AREA); // read and normalize (area) the geometry
 
-            List<string> fstr = new List<string>();
-            for(int i=0; i<geomObjLi.Count; i++) 
-            { fstr.Add(geomObjLi[i].displayString()); }
+            List<string> norGeomObjstr = csvParserGeom.norGeomObjLiStr;
 
             DA.SetDataList(0, adjObjLi);
-            DA.SetDataList(1, geomObjLiStr);
-            DA.SetDataList(2, fstr);
+            //DA.SetDataList(1, geomSpaceStr);
+            DA.SetDataList(1, geomObjStr);
+            DA.SetDataList(2, norGeomObjstr);
 
-            GenCBspGeom cbspgeom = new GenCBspGeom(adjObjLi, geomObjLi); // class for geom methods
-            Polyline poly = cbspgeom.GenerateInitialCurve(geomObjLi); DA.SetData(3, poly);
-            List<Point3d> ptLi = new List<Point3d>();
-            IEnumerator<Point3d> pts = poly.GetEnumerator();
-            while (pts.MoveNext())
-            {
-                ptLi.Add(pts.Current);
-            }
+            GenCBspGeom cbspgeom = new GenCBspGeom(SITE_CRV, adjObjLi, geomObjLi); // class for geom methods
+
+            Polyline poly = cbspgeom.GenerateInitialCurve(geomObjLi);
+            DA.SetData(3, poly);
+
+
+            List<string> geomstr = cbspgeom.AdjObjLi;
+
+            DA.SetDataList(6, geomstr);
            
 
             // bspgeom.RunRecursions(ptLi.ToArray(), 0);
@@ -95,3 +102,4 @@ namespace DotsProj
         public override Guid ComponentGuid { get { return new Guid("73dd4e25-553b-4853-a8e4-5d17d96afa84"); } }
     }
 }
+

@@ -7,31 +7,61 @@ namespace DotsProj
     {
         private List<string> input;
         private List<string> GeomObjLiStr;
-        private List<GeomEntry> GeomObjLi;
+        private List<GeomObj> GeomObjLi;
+        private double SiteAr;
+
         public MakeGeomObjList() { }
 
-        public MakeGeomObjList(List<string> inputstrli)
+        public MakeGeomObjList(List<string> inputstrli, double site_ar_)
         {
             GeomObjLiStr = new List<string>();
-            GeomObjLi=new List<GeomEntry>();
+            GeomObjLi=new List<GeomObj>();
             input = new List<string>();
             input = inputstrli;
+            this.SiteAr = site_ar_;
         }
 
-        public double GetDoubleFromString(string str)
+        public double GetDoubleFromString(string Value)
         {
             double x = 0.00;
-            string s = str.Trim();
-            if (String.Equals(str, "")) return x;
-            else return Convert.ToDouble(s);
+            if (Value == null)
+            {
+                return 0;
+            }
+            else
+            {
+                double OutVal;
+                double.TryParse(Value, out OutVal);
+
+                if (double.IsNaN(OutVal) || double.IsInfinity(OutVal))
+                {
+                    return 0;
+                }
+                return OutVal;
+            }
         }
 
         public double GetInt16FromString(string str)
         {
             int x = 0;
             string s = str.Trim();
-            if (String.Equals(str, "")) return x;
-            else return Convert.ToInt16(s);
+            try
+            {
+                if (String.Equals(str, "")) {
+                    return x;
+                }else if (str == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return Convert.ToInt16(s);
+                }
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
         }
 
         public List<string> GetGeomObjListStr()
@@ -39,47 +69,90 @@ namespace DotsProj
             for (int i = 1; i < input.Count; i++)
             {
                 int opt = 0; // if 0, use area, ratio else use length, width
+                // format of the inputs: name[0], area[1], ratio (a:b)[2], number[3], length[4], width[5]
+                string name = ""; 
+                double Area = 0.0;
+                int num = 0;
+                double ratio = 0.0;
+                double le = 0.0;
+                double wi = 0.0;
+                try
+                {
+                    name = input[i].Split(',')[0].Trim().ToLower();
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                try
+                {
+                    Area = GetDoubleFromString(input[i].Split(',')[1]);
+                }
+                catch (Exception) { Area = 0.0; }
+                try
+                {
+                    ratio = Convert.ToDouble(input[i].Split(',')[2]);
+                }
+                catch (Exception) { ratio = 0.0; }
+                try
+                {
+                    num = Convert.ToInt32(input[i].Split(',')[3]);
+                }
+                catch (Exception) { num = 0; }
+                try
+                {
+                    le = Convert.ToDouble(input[i].Split(',')[4]);
+                }
+                catch (Exception) { le = 0.0; }
+                try
+                {
+                    wi = Convert.ToDouble(input[i].Split(',')[5]);
+                }
+                catch (Exception) { wi = 0.0; }
+                if (num == 0) { continue; }
+                if(Area > 0 && ratio>0)
+                {
+                    le = Area * ratio;
+                    wi = Area / le;
 
-                // format of the inputs:
-                /// name[0], area[1], ratio (a:b)[2], number[3], length[4], width[5]
-                string name = input[i].Split(',')[0].Trim().ToLower();
-                string parent = input[i].Split(',')[1].Trim().ToLower();
-                if (string.Equals(parent, "") == true || parent == null) parent = "0";
-              
-                double area = GetDoubleFromString(input[i].Split(',')[2]);
-                if (area < 0.01) opt++;
-
-                double ratio = GetDoubleFromString(input[i].Split(',')[3]);
-                double a = 0.0; double b = 0.0;
-                if (ratio < 0.01) { opt++; }
+                }else if(le>0 && wi > 0)
+                {
+                    Area = le * wi;
+                }
                 else
                 {
-                    a = 1 - ratio;
-                    b = ratio;
+                    continue;
                 }
-
-                int num = Convert.ToInt32(input[i].Split(',')[4]);
-
-                double le = GetDoubleFromString(input[i].Split(',')[5]);
-                double wi = GetDoubleFromString(input[i].Split(',')[6]);
-                if (le > 0.0 && wi > 0.0) { opt = 0; }
-                else { opt = 1; }
-
-                if (num == 0) continue; // num =0, then continue - do not initialize
-
-                GeomEntry geom;
-                if (opt > 0) { geom = new GeomEntry(name, parent, area, a, b, num); }
-                else { geom = new GeomEntry(name, parent, le, wi, num); }
-                String str = geom.displayString();
+                string str = string.Format("name: {0}, area: {1}, length: {2}, width: {3}", name, Area, le, wi);
                 GeomObjLiStr.Add(str);
-                GeomObjLi.Add(geom);
+                GeomObj geomEntry = new GeomObj(name, Area, le, wi, num);
+                GeomObjLi.Add(geomEntry);
             }
             return GeomObjLiStr;
         }
-
-        public List<GeomEntry> GetGeomObj()
+        
+        public List<GeomObj> GetGeomObj()
         {
             return GeomObjLi;
         }
+
+        public List<GeomObj> NormalizeGeomObj(List<GeomObj> geomEntryObjLi, double siteAr)
+        {
+            List<GeomObj> norGeomEntryObjLi = new List<GeomObj>();
+            double sumAr=0.0;
+            for(int i=0; i<geomEntryObjLi.Count; i++)
+            {
+                sumAr += geomEntryObjLi[i].Area2;
+            }
+            for (int i = 0; i < geomEntryObjLi.Count; i++)
+            {
+                GeomObj newObj = geomEntryObjLi[i];
+                int num = geomEntryObjLi[i].Number;
+                newObj.Area2= geomEntryObjLi[i].Area2 * siteAr / sumAr;
+                newObj.RatioLW = geomEntryObjLi[i].Length / (geomEntryObjLi[i].Length + geomEntryObjLi[i].Width);
+                norGeomEntryObjLi.Add(newObj);
+            }
+            return norGeomEntryObjLi;
+        }
     }   // end of public class
-}       // end of namespace
+}   // end of namespace
