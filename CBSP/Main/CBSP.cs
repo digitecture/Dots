@@ -83,7 +83,7 @@ namespace DotsProj
             DA.SetDataList(1, geomObjStr);
             DA.SetDataList(2, norGeomObjstr);
 
-            GenCBspGeom cbspgeom = new GenCBspGeom(SITE_CRV, adjObjLi, norGeomObjLi, rotation); // class for geom methods
+            GenCBspGeom cbspgeom = new GenCBspGeom(SITE_CRV, adjObjLi, norGeomObjLi , rotation); // class for geom methods
             cbspgeom.GenerateInitialCurve();
             List<Curve> BPolys = cbspgeom.ResultPolys;
             List<Curve> FPolys = cbspgeom.BSPCrvs;
