@@ -12,142 +12,131 @@ namespace DotsProj
     public class GenCBspGeom
     {
         private Curve SITE_CRV;
+        private Curve rot_SITE_CRV;
         public List<string> AdjObjLi { get; set; }
-        public List<GeomObj> GeomEntryObjLi { get; set; }
+        public List<GeomObj> NorGeomObjLi { get; set; }
+        private double Rotation;
 
-        public List<GeomObj> NormGeomObjLi { get; set; }
-
-        private List<Polyline> fPolys = new List<Polyline>();
-        private List<PolylineCurve> fPolyCrv = new List<PolylineCurve>();
-        private List<string> rVal = new List<string>();
+        public List<Curve> BSPCrvs { get; set; } // transformed
+        public List<Curve> ResultPolys { get; set; } //reverse transformed final solution
         Random rnd = new Random();
+
+        public int RecursionCounter = 0;
+        public int NumPendantPoly = 0;
+
+        private Rhino.Geometry.Transform XForm;
+        private Rhino.Geometry.Transform reverseXForm;
 
         public GenCBspGeom() { }
 
-        public GenCBspGeom(Curve site_crv, List<string> adjObjLi_, List<GeomObj> geomEntryObjLi_)
+        public GenCBspGeom(Curve site_crv, List<string> adjObjLi_, List<GeomObj> norGeomObjLi_, double rot)
         {
             SITE_CRV = site_crv;
             AdjObjLi = adjObjLi_;
-            GeomEntryObjLi = geomEntryObjLi_;
-            NormalizeGeomObj();
+            NorGeomObjLi = norGeomObjLi_;
+            Rotation = Rhino.RhinoMath.ToRadians(rot);
+            
+            Point3d SITE_CEN = AreaMassProperties.Compute(SITE_CRV).Centroid;
+            XForm = Rhino.Geometry.Transform.Rotation(Rotation, SITE_CEN);
+            reverseXForm = Rhino.Geometry.Transform.Rotation(-Rotation, SITE_CEN);
+
+            rot_SITE_CRV = SITE_CRV.DuplicateCurve();
+            rot_SITE_CRV.Transform(XForm);
+
+            BSPCrvs = new List<Curve>();
+            ResultPolys = new List<Curve>();
         }
 
-        public void NormalizeGeomObj()
+        public void GenerateInitialCurve()
         {
-            double siteAr = AreaMassProperties.Compute(SITE_CRV).Area;
-            double sum_ar = 0.0;
-            for (int i = 0; i < GeomEntryObjLi.Count; i++)
+            ResultPolys = new List<Curve>();
+            HorSplit(rot_SITE_CRV);
+            //VerSplit(rot_SITE_CRV);
+            foreach (Curve crvR in BSPCrvs)
             {
-                sum_ar += GeomEntryObjLi[i].Area2;
-            }
-            NormGeomObjLi = new List<GeomObj>();
-            for (int i = 0; i < GeomEntryObjLi.Count; i++)
-            {
-                GeomObj obj = GeomEntryObjLi[i];
-                obj.Area2 = obj.Area2 * siteAr / sum_ar;
-                NormGeomObjLi.Add(obj);
-            }
-        }
-
-
-        public List<PolylineCurve> GetFPolys()
-        {
-            return fPolyCrv;
-        }
-        public List<string> GetRVals()
-        {
-            return rVal;
-        }
-
-        public Polyline GenerateInitialCurve(List<GeomObj> geomobjli)
-        {
-
-            double sum = 0.0;
-            for (int i = 0; i < geomobjli.Count; i++)
-            {
-                double ar = geomobjli[i].Area2;
-                int num = geomobjli[i].Number;
-                sum += (ar * num);
-            }
-            double di = Math.Sqrt(sum);
-            Point3d[] pts = new Point3d[5];
-            pts[0] = new Point3d(0, 0, 0);
-            pts[1] = new Point3d(di, 0, 0);
-            pts[2] = new Point3d(di, di, 0);
-            pts[3] = new Point3d(0, di, 0);
-            pts[4] = new Point3d(0, 0, 0);
-            Polyline poly = new Polyline(pts);
-            return poly;
-        }
-
-        public void RunRecursions(Point3d[] inpPolyPts, int counter)
-        {
-            counter++;
-            double t = rnd.NextDouble();
-            List<Point3d[]> retPolyPts;
-            if (t < 0.5) { retPolyPts = VerSplit(inpPolyPts); }
-            else { retPolyPts = HorSplit(inpPolyPts); }
-
-            // recursion call
-            if (counter < 3)
-            {
-                RunRecursions(retPolyPts[0], counter);
-                RunRecursions(retPolyPts[1], counter);
-            }
-            else
-            {
-                // first polyline curve
-                PolylineCurve crv0 = new PolylineCurve(retPolyPts[0]);
-                fPolyCrv.Add(crv0);
-
-                // second polyline curve
-                PolylineCurve crv1 = new PolylineCurve(retPolyPts[1]);
-                fPolyCrv.Add(crv1);
+                Curve c2 = crvR.DuplicateCurve();
+                c2.Transform(reverseXForm);
+                ResultPolys.Add(c2);
             }
         }
 
-        public List<Point3d[]> VerSplit(Point3d[] arr)
+        public void HorSplit(Curve iniPoly)
         {
-            double t = rnd.NextDouble();
-            if (t < 0.2) t = 0.2;
-            rVal.Add(t.ToString());
+            Point3d[] B = GetBBoxPoly(iniPoly);
+            Point3d a = B[0];
+            Point3d b = B[1];
+            Point3d c = B[2];
+            Point3d d = B[3];
+            double t = rnd.NextDouble()*0.5 + 0.25;
+            Point3d e = new Point3d(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t, 0);
+            Point3d f = new Point3d(d.X + (c.X - d.X) * t, d.Y + (c.Y - d.Y) * t, 0);
 
-            // input
-            Point3d a = arr[0];
-            Point3d b = arr[1];
-            Point3d c = arr[2];
-            Point3d d = arr[3];
+            List<Point3d> le = new List<Point3d> { a, e, f, d, a };
+            List<Point3d> ri = new List<Point3d> { e, b, c, f, e };
 
-            // vertical split
-            Point3d e = new Point3d(a.X, (a.Y + d.Y) * t, 0);
-            Point3d f = new Point3d(b.X, e.Y, 0);
-            Point3d[] pts1 = { a, b, f, e, a };
-            Point3d[] pts2 = { e, f, c, d, e };
+            PolylineCurve left = new PolylineCurve(le);
+            PolylineCurve right = new PolylineCurve(ri);
 
-            List<Point3d[]> ptLi = new List<Point3d[]> { pts1, pts2 };
-            return ptLi;
+            Curve[] leftCrv = Curve.CreateBooleanIntersection(left, rot_SITE_CRV);
+            Curve[] rightCrv = Curve.CreateBooleanIntersection(right, rot_SITE_CRV);
+
+
+            foreach (Curve crvL in leftCrv)
+            {
+                //crvL.Transform(reverseXForm);
+                BSPCrvs.Add(crvL);
+            }
+            foreach (Curve crvR in rightCrv)
+            {
+                //crvR.Transform(reverseXForm);
+                BSPCrvs.Add(crvR);
+            }
+        }
+     
+        public void VerSplit(Curve iniPoly)
+        {
+            Point3d[] B = GetBBoxPoly(iniPoly);
+            Point3d a = B[0];
+            Point3d b = B[1];
+            Point3d c = B[2];
+            Point3d d = B[3];
+            double t = rnd.NextDouble() * 0.5 + 0.25;
+            Point3d e = new Point3d(a.X + (d.X - a.X) * t, a.Y + (d.Y - a.Y) * t, 0);
+            Point3d f = new Point3d(d.X + (c.X - b.X) * t, d.Y + (c.Y - b.Y) * t, 0);
+
+            List<Point3d> up_ = new List<Point3d> { a, b, f, e, a };
+            List<Point3d> dn_ = new List<Point3d> { e, f, c, d, e };
+
+            PolylineCurve up = new PolylineCurve(up_);
+            PolylineCurve dn = new PolylineCurve(dn_);
+
+            Curve[] upCrv = Curve.CreateBooleanIntersection(up, rot_SITE_CRV);
+            Curve[] dnCrv = Curve.CreateBooleanIntersection(dn, rot_SITE_CRV);
+
+
+            foreach (Curve crvU in upCrv)
+            {
+                //crvL.Transform(reverseXForm);
+                BSPCrvs.Add(crvU);
+            }
+            foreach (Curve crvD in dnCrv)
+            {
+                //crvR.Transform(reverseXForm);
+                BSPCrvs.Add(crvD);
+            }
         }
 
-        public List<Point3d[]> HorSplit(Point3d[] arr)
+        public Point3d[] GetBBoxPoly(Curve crv)
         {
-            double t = rnd.NextDouble();
-            if (t < 0.2) t = 0.2;
-            rVal.Add(t.ToString());
-
-            // input 
-            Point3d a = arr[0];
-            Point3d b = arr[1];
-            Point3d c = arr[2];
-            Point3d d = arr[3];
-
-            // horizontal split
-            Point3d e = new Point3d((a.X +b.X)*t, a.Y, 0);
-            Point3d f = new Point3d(e.X, d.Y , 0);
-            Point3d[] pts1 = { a, e, f, d, a };
-            Point3d[] pts2 = { e, b, c, f, e };
-
-            List<Point3d[]> ptLi = new List<Point3d[]>{ pts1, pts2 };
-            return ptLi;
+            var iniB = crv.GetBoundingBox(true);
+            Point3d a = iniB.Min;
+            Point3d c = iniB.Max;
+            Point3d b = new Point3d(c.X, a.Y, 0);
+            Point3d d = new Point3d(a.X, c.Y, 0);
+            Point3d[] pts = { a, b, c, d, a };
+            List<Point3d> ptsLi = new List<Point3d> { a, b, c, d, a };
+            PolylineCurve poly = new PolylineCurve(ptsLi);
+            return pts;
         }
     }
 }

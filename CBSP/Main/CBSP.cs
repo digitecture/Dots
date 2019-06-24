@@ -32,6 +32,8 @@ namespace DotsProj
             pManager.AddTextParameter("File Path Adjacency", "iAdjacencyPath", "adjacency matrix: csv file", GH_ParamAccess.item);
             // 2. geometric list path
             pManager.AddTextParameter("File Path Geometry", "iGeomPath", "geometric requirements: csv file", GH_ParamAccess.item);
+            // 3. rotation
+            pManager.AddNumberParameter("Rotation-in-degrees", "Rot-degrees", "Rotation (in degrees) alignment of overall geometric forms", GH_ParamAccess.item);
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -42,13 +44,11 @@ namespace DotsProj
             pManager.AddTextParameter("Output Functions", "oGeom", "output of reading spatial (geometric) requirements", GH_ParamAccess.list);
             // 2 output geometry objects as string list
             pManager.AddTextParameter("Temp Geom Obj List", "oBSP", "Output list of Geom objs", GH_ParamAccess.list);
-            // 3. ouput polylines
-            pManager.AddCurveParameter("Display Polyline", "oPoly", "Output list of Polyline", GH_ParamAccess.item);
-            // 4 output random values used to generate polys
-            pManager.AddTextParameter("rnd vals", "oRnd", "output random vals", GH_ParamAccess.list);
-            // 5 output r polys
-            pManager.AddCurveParameter("Recursive Polys", "rPolys", "output polys", GH_ParamAccess.list);
-            // 6 output debug string list
+            // 3. ouput single polylines
+            pManager.AddCurveParameter("Debug Polyline", "dPoly", "Output of debug Polyline", GH_ParamAccess.item);
+            // 4. ouput pendant polylines
+            pManager.AddCurveParameter("Display Pendant Polyline", "result-Poly", "Output list of Polylines", GH_ParamAccess.list);
+            // 5. output debug string list
             pManager.AddTextParameter("Debug string", "debug-string", "debug string", GH_ParamAccess.list);
         }
 
@@ -57,10 +57,12 @@ namespace DotsProj
             Curve SITE_CRV = null;
             string adjFilePath = "null";
             string geomFilePath = "null";
-
+            double rotation = double.NaN;
+            
             if(!DA.GetData(0, ref SITE_CRV)) return;
             if(!DA.GetData(1, ref adjFilePath)) return;
             if(!DA.GetData(2, ref geomFilePath)) return;
+            if (!DA.GetData(3, ref rotation)) return;
 
             double SITE_AREA = AreaMassProperties.Compute(SITE_CRV).Area;
 
@@ -73,28 +75,22 @@ namespace DotsProj
             List<string> geomObjStr=csvParserGeom.GetGeomObjLi(geomSpaceStr, SITE_AREA); // read and normalize (area) the geometry
 
             List<string> norGeomObjstr = csvParserGeom.norGeomObjLiStr;
+            List<GeomObj> norGeomObjLi = csvParserGeom.norGeomObjLi;
 
             DA.SetDataList(0, adjObjLi);
-            //DA.SetDataList(1, geomSpaceStr);
             DA.SetDataList(1, geomObjStr);
             DA.SetDataList(2, norGeomObjstr);
 
-            GenCBspGeom cbspgeom = new GenCBspGeom(SITE_CRV, adjObjLi, geomObjLi); // class for geom methods
+            GenCBspGeom cbspgeom = new GenCBspGeom(SITE_CRV, adjObjLi, geomObjLi, rotation); // class for geom methods
+            cbspgeom.GenerateInitialCurve();
+            List<Curve> BPolys = cbspgeom.ResultPolys;
+            List<Curve> FPolys = cbspgeom.BSPCrvs;
+            DA.SetDataList(3, BPolys);
+            DA.SetDataList(4, FPolys);
 
-            Polyline poly = cbspgeom.GenerateInitialCurve(geomObjLi);
-            DA.SetData(3, poly);
-
-
-            List<string> geomstr = cbspgeom.AdjObjLi;
-
-            DA.SetDataList(6, geomstr);
+            
+            
            
-
-            // bspgeom.RunRecursions(ptLi.ToArray(), 0);
-            // List<PolylineCurve> fpolys = bspgeom.GetFPolys();
-            // List<string> rvals = bspgeom.GetRVals();
-            // DA.SetDataList(4, rvals);
-            // DA.SetDataList(5, fpolys);
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.genCrvs; } }

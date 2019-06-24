@@ -20,7 +20,7 @@ namespace DotsProj
         private List<string> geomObjLiStr;
         private List<GeomObj> geomObjLi;
 
-        private List<GeomObj> norGeomLi;
+        public List<GeomObj> norGeomObjLi { get; set; }
         public List<string> norGeomObjLiStr { get; set; }
 
         public CsvParser(){}
@@ -73,12 +73,12 @@ namespace DotsProj
             geomObjLi = new List<GeomObj>();
             geomObjLi = obj.GetGeomObj(); // file : MakeGeomObjList-object
 
-            norGeomLi = new List<GeomObj>();
-            norGeomLi = obj.NormalizeGeomObj(geomObjLi, site_ar); // file : MakeGeomObjList-object
+            norGeomObjLi = new List<GeomObj>();
+            norGeomObjLi = obj.NormalizeGeomObj(geomObjLi, site_ar); // file : MakeGeomObjList-object
 
             norGeomObjLiStr = new List<string>();
-            for (int i = 0; i < norGeomLi.Count; i++) {
-                string s = norGeomLi[i].ToString();
+            for (int i = 0; i < norGeomObjLi.Count; i++) {
+                string s = norGeomObjLi[i].ToString();
                 norGeomObjLiStr.Add(s);
             }
             return geomObjLiStr;
