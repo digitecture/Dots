@@ -13,6 +13,8 @@ namespace DotsProj
     class BspUfgAlg
     {
         string MSG = "";
+        public List<Curve> DebugBBX { get; set; }
+
         List<Curve> BspTreeCrvs = new List<Curve>();
         List<Curve> FCURVE = new List<Curve>();
         List<Curve> ExtractFCrvs = new List<Curve>();
@@ -60,11 +62,7 @@ namespace DotsProj
             SiteCrv.Transform(xform);
         }
 
-        public Point3d getCentroid()
-        {
-            Point3d pt = Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid;
-            return pt;
-        }
+        public Point3d getCentroid() { return Rhino.Geometry.AreaMassProperties.Compute(SiteCrv).Centroid; }
 
         public string getMSG() { return MSG; }
 
@@ -72,7 +70,7 @@ namespace DotsProj
 
         public void RUN_BSP_ALG()
         {
-           
+            DebugBBX = new List<Curve>();
             //run the bsp algorithm
             Curve crv = SiteCrv.DuplicateCurve();
             FCURVE = new List<Curve>();
@@ -100,13 +98,25 @@ namespace DotsProj
 
         public List<Curve> GetBspResults() { return ExtractFCrvs; } //return FCURVE; }
 
+        public void subtractCrv()
+        {
+            for (int i = 0; i < FCURVE.Count; i++)
+            {
+                Curve crv = FCURVE[i];
+                for (int j = 0; j < IntCrv.Count; j++)
+                {
+                    Curve crv2 = IntCrv[j];
+                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);//Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
+                    for (int k = 0; k < crvDiffArr.Length; k++)
+                    {
+                        ExtractFCrvs.Add(crvDiffArr[k]);
+                    }
+                }
+            }
+        }
+
         public void recSplit(int recCounter)
         {
-            MSG += "\nrecursion Counter=" 
-                + recCounter.ToString()
-                +";  crvs in stack: "
-                +BspTreeCrvs.Count.ToString();
-
             Curve inicrv = BspTreeCrvs[recCounter];
             int N = NUM_PARCELS_REQ;
             int n = BspTreeCrvs.Count - recCounter;
@@ -119,27 +129,8 @@ namespace DotsProj
             {
                 for(int i=recCounter; i<BspTreeCrvs.Count; i++)
                 {
-                    MSG += "\naccepted crv index: " + i.ToString();
                     Curve crv = BspTreeCrvs[i];
                     FCURVE.Add(crv);
-                }
-            }
-        }
-
-        public void subtractCrv()
-        {
-            for (int i=0; i<FCURVE.Count; i++)
-            {
-                Curve crv = FCURVE[i];
-                for(int j=0; j<IntCrv.Count; j++)
-                {
-                    Curve crv2 = IntCrv[j];
-                    //Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
-                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);
-                    for (int k = 0; k < crvDiffArr.Length; k++)
-                    {
-                        ExtractFCrvs.Add(crvDiffArr[k]);
-                    }
                 }
             }
         }
@@ -160,11 +151,9 @@ namespace DotsProj
             PolylineCurve crv1 = new PolylineCurve(polyPts[0]);
             PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
 
-            // get intersection with main site crv
-            // Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
-            // Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
-            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);
-            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
+            // get intersection with main (rotated) site crv
+            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);// Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);// Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
 
             if (crvs1.Length > 0) {
                 for (int i = 0; i < crvs1.Length; i++) { BspTreeCrvs.Add(crvs1[i]); }
@@ -196,6 +185,13 @@ namespace DotsProj
             Point3d[] ri = { e, b, c, f, e };
 
             List<Point3d[]> pts = new List<Point3d[]> { le, ri };
+
+            PolylineCurve poly1 = new PolylineCurve(le);
+            PolylineCurve poly2 = new PolylineCurve(ri);
+            DebugBBX.Add(poly1);
+            DebugBBX.Add(poly2);
+
+
             return pts;
         }
 
@@ -219,6 +215,12 @@ namespace DotsProj
             Point3d[] dn = { e, f, c, d, e };
 
             List<Point3d[]> pts = new List<Point3d[]> { up, dn };
+
+            PolylineCurve poly1 = new PolylineCurve(up);
+            PolylineCurve poly2 = new PolylineCurve(dn);
+            DebugBBX.Add(poly1);
+            DebugBBX.Add(poly2);
+
             return pts;
         }
     }

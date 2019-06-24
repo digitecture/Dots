@@ -43,6 +43,7 @@ namespace DotsProj
         {
             pManager.AddCurveParameter("lowest deviation solution", "min-output-geom", "output-street configuration on site with lowest score", GH_ParamAccess.list);
             pManager.AddCurveParameter("output from required iteration", "required-output-geom", "output street configurations from required iteration", GH_ParamAccess.list);
+            // pManager.AddCurveParameter("debug output", "debug poly", "debug poly", GH_ParamAccess.list);
         }
 
         protected override void SolveInstance(IGH_DataAccess DA)
@@ -96,6 +97,15 @@ namespace DotsProj
             try { lowestDevCrv = bspObjLi[minIndex].GetCrvs(); } catch(Exception) { }
             try { DA.SetDataList(0, lowestDevCrv); } catch (Exception) { }
             try { DA.SetDataList(1, thisFCRVS); } catch (Exception) { }
+
+            /*
+            try
+            {
+                List<Curve> DebugBBX = bspalg.DebugBBX;
+                DA.SetDataList(2, DebugBBX);
+            }
+            catch (Exception) { }
+            */
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.revbspSimple; } }
