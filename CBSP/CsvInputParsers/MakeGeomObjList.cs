@@ -123,7 +123,7 @@ namespace DotsProj
                 {
                     continue;
                 }
-                string str = string.Format("name: {0}, area: {1}, length: {2}, width: {3}", name, Area, le, wi);
+                string str = string.Format("name: {0}, area: {1}, num: {2}, length: {3}, width: {4}", name, Area, num, le, wi);
                 GeomObjLiStr.Add(str);
                 GeomObj geomEntry = new GeomObj(name, Area, le, wi, num);
                 GeomObjLi.Add(geomEntry);
@@ -149,9 +149,18 @@ namespace DotsProj
                 GeomObj newObj = geomEntryObjLi[i];
                 int num = geomEntryObjLi[i].Number;
                 double area3= geomEntryObjLi[i].Area2 * siteAr / sumAr;
-                newObj.Area2= geomEntryObjLi[i].Area2 * siteAr / sumAr;
-                newObj.RatioLW = geomEntryObjLi[i].Length / (geomEntryObjLi[i].Length + geomEntryObjLi[i].Width);
-                norGeomEntryObjLi.Add(newObj);
+                double ar_each = area3 / num;
+                for(int j=0; j<num; j++)
+                {
+                    GeomObj newObj2 = geomEntryObjLi[i];
+                    newObj2.Area2 = ar_each;
+                    newObj2.Number = 1;
+                    newObj2.RatioLW = geomEntryObjLi[i].Length / (geomEntryObjLi[i].Length + geomEntryObjLi[i].Width);
+                    norGeomEntryObjLi.Add(newObj2);
+                }
+                // newObj.Area2= geomEntryObjLi[i].Area2 * siteAr / sumAr;
+                // newObj.RatioLW = geomEntryObjLi[i].Length / (geomEntryObjLi[i].Length + geomEntryObjLi[i].Width);
+                // norGeomEntryObjLi.Add(newObj);
             }
             return norGeomEntryObjLi;
         }

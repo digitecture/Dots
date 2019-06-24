@@ -50,19 +50,21 @@ namespace DotsProj
 
         public void GenerateInitialCurve()
         {
+            // rotate the curve and take the bounding box of rotation
+            // find the partitions of the rotated bbx
+            // extract the intersections of the curve x bbx
+
             ResultPolys = new List<Curve>();
             BBxCrvs = new List<Curve>();
-
+            
             // initialize stack
             List<Point3d> iniPtLi = new List<Point3d>();
             Point3d[] ptArr = GetBBoxPoly(rot_SITE_CRV);
             iniPtLi.AddRange(ptArr);
             PolylineCurve iniBBX = new PolylineCurve(iniPtLi);
-            //iniBBX.Transform(XForm);
             BSPCrvs.Add(iniBBX);
-            // BSPCrvs.Add(rot_SITE_CRV);
 
-            MaxRecursions = 15;
+            MaxRecursions = NorGeomObjLi.Count;
             globalRecursionCounter = 0;
             runRecursions(); // run the recursions & update global vars
 
