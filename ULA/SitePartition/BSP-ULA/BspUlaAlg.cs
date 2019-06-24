@@ -106,7 +106,8 @@ namespace DotsProj
                 for (int j = 0; j < IntCrv.Count; j++)
                 {
                     Curve crv2 = IntCrv[j];
-                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);//Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
+                    // Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2);
+                    Curve[] crvDiffArr = Curve.CreateBooleanDifference(crv, crv2, 0.01);
                     for (int k = 0; k < crvDiffArr.Length; k++)
                     {
                         ExtractFCrvs.Add(crvDiffArr[k]);
@@ -152,8 +153,10 @@ namespace DotsProj
             PolylineCurve crv2 = new PolylineCurve(polyPts[1]);
 
             // get intersection with main (rotated) site crv
-            Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);// Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
-            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);// Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
+            // Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1);
+             Curve[] crvs1 = Curve.CreateBooleanIntersection(SiteCrv, crv1, 0.01); 
+            //Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2);
+            Curve[] crvs2 = Curve.CreateBooleanIntersection(SiteCrv, crv2, 0.01);
 
             if (crvs1.Length > 0) {
                 for (int i = 0; i < crvs1.Length; i++) { BspTreeCrvs.Add(crvs1[i]); }

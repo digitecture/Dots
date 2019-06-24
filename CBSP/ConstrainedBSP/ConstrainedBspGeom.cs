@@ -9,6 +9,7 @@ using Rhino.Geometry;
 
 namespace DotsProj
 {
+
     public class GenCBspGeom
     {
         private Curve SITE_CRV;
@@ -21,8 +22,10 @@ namespace DotsProj
         private int MaxRecursions;
 
         public List<Curve> BSPCrvs { get; set; } // transformed
-        public List<Curve> ResultPolys { get; set; } //reverse transformed final solution
+        public List<Curve> ResultBBxPolys { get; set; } // reverse transformed final solution
+        public List<Curve> ExtractedCrvs { get; set; } // get the real curve intesection - site - bbxpoly[i]
         public List<Curve> BBxCrvs { get; set; } //bbx polylines
+        public List<nsSeg> PartitionSegLi { get; set; } // partition lines of the bbx
         Random rnd = new Random();
 
         private Rhino.Geometry.Transform XForm;
@@ -45,7 +48,24 @@ namespace DotsProj
             rot_SITE_CRV.Transform(XForm);
 
             BSPCrvs = new List<Curve>();
-            ResultPolys = new List<Curve>();
+            ResultBBxPolys = new List<Curve>();
+        }
+
+        public void ExtractPolyFromSite()
+        {
+            List<Curve> crvLi = new List<Curve>();
+
+            ExtractedCrvs = new List<Curve>();
+
+            Curve site_crv = SITE_CRV.DuplicateCurve();
+            for(int i=0; i<ResultBBxPolys.Count; i++)
+            {
+                Curve[] diffCrv = Curve.CreateBooleanIntersection(site_crv, ResultBBxPolys[i], Rhino.RhinoDoc.ActiveDoc.ModelAbsoluteTolerance);
+                for(int j=0; j<diffCrv.Length; j++)
+                {
+                    ExtractedCrvs.Add(diffCrv[j]);
+                }
+            }
         }
 
         public void GenerateInitialCurve()
@@ -54,7 +74,7 @@ namespace DotsProj
             // find the partitions of the rotated bbx
             // extract the intersections of the curve x bbx
 
-            ResultPolys = new List<Curve>();
+            ResultBBxPolys = new List<Curve>();
             BBxCrvs = new List<Curve>();
             
             // initialize stack
@@ -72,7 +92,7 @@ namespace DotsProj
             {
                 Curve c2 = BSPCrvs[i].DuplicateCurve();
                 c2.Transform(reverseXForm);
-                ResultPolys.Add(c2);
+                ResultBBxPolys.Add(c2);
             }
         }
 
@@ -87,16 +107,11 @@ namespace DotsProj
             if (globalRecursionCounter < MaxRecursions)
             {
                 globalRecursionCounter++;
+                // HOR = a-d | Ver = a-b 
                 // int t = rnd.Next(0, 9);
                 // if (t > 5)
-                if(a.DistanceTo(b)<a.DistanceTo(d))
-                {
-                    HorSplit(crv);
-                }
-                else
-                {
-                    VerSplit(crv);
-                }
+                if(a.DistanceTo(b)<a.DistanceTo(d)) { HorSplit(crv); }
+                else { VerSplit(crv); }
                 runRecursions();
             }
         }
@@ -135,6 +150,12 @@ namespace DotsProj
             Point3d e = new Point3d(a.X + (d.X - a.X) * t, a.Y + (d.Y - a.Y) * t, 0);
             Point3d f = new Point3d(b.X + (c.X - b.X) * t, b.Y + (c.Y - b.Y) * t, 0);
 
+
+            nsPt nsE = new nsPt(e.X, e.Y, e.Z);
+            nsPt nsF = new nsPt(f.X, f.Y, f.Z);
+            nsSeg nsEF = new nsSeg(nsE, nsF);
+            PartitionSegLi.Add(nsEF);
+
             List<Point3d> up_ = new List<Point3d> { a, b, f, e, a };
             List<Point3d> dn_ = new List<Point3d> { e, f, c, d, e };
 
@@ -159,6 +180,7 @@ namespace DotsProj
             BBxCrvs.Add(bbxCrv);
             return pts;
         }
+
         public List<Point3d> GetPolyPts(Curve crv)
         {
             var t = crv.TryGetPolyline(out Polyline pts);

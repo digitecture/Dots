@@ -44,7 +44,6 @@ namespace DotsProj.SourceCode.UFG.ExtrusionConfigs
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             Curve siteCrv = null;
-            double fsr = double.NaN;// deprecated
             double flrHt = double.NaN;
             double minAr = double.NaN;
             string stepbackstr = "2,3,4";
