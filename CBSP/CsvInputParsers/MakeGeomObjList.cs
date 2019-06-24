@@ -148,6 +148,7 @@ namespace DotsProj
             {
                 GeomObj newObj = geomEntryObjLi[i];
                 int num = geomEntryObjLi[i].Number;
+                double area3= geomEntryObjLi[i].Area2 * siteAr / sumAr;
                 newObj.Area2= geomEntryObjLi[i].Area2 * siteAr / sumAr;
                 newObj.RatioLW = geomEntryObjLi[i].Length / (geomEntryObjLi[i].Length + geomEntryObjLi[i].Width);
                 norGeomEntryObjLi.Add(newObj);

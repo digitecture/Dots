@@ -48,7 +48,9 @@ namespace DotsProj
             pManager.AddCurveParameter("Debug Polyline", "dPoly", "Output of debug Polyline", GH_ParamAccess.item);
             // 4. ouput pendant polylines
             pManager.AddCurveParameter("Display Pendant Polyline", "result-Poly", "Output list of Polylines", GH_ParamAccess.list);
-            // 5. output debug string list
+            // 5. ouput pendant polylines
+            pManager.AddCurveParameter("Display Bounding Box Polyline", "bbx-Poly", "Output list of bounding-box Polylines", GH_ParamAccess.list);
+            // 6. output debug string list
             pManager.AddTextParameter("Debug string", "debug-string", "debug string", GH_ParamAccess.list);
         }
 
@@ -85,12 +87,13 @@ namespace DotsProj
             cbspgeom.GenerateInitialCurve();
             List<Curve> BPolys = cbspgeom.ResultPolys;
             List<Curve> FPolys = cbspgeom.BSPCrvs;
+            List<Curve> BBxPolys = cbspgeom.BBxCrvs;
             DA.SetDataList(3, BPolys);
             DA.SetDataList(4, FPolys);
+            DA.SetDataList(5, BBxPolys);
 
-            
-            
-           
+
+
         }
 
         protected override System.Drawing.Bitmap Icon { get { return Properties.Resources.genCrvs; } }

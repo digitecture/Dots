@@ -17,12 +17,13 @@ namespace DotsProj
         public List<GeomObj> NorGeomObjLi { get; set; }
         private double Rotation;
 
+        private int globalRecursionCounter = 0;
+        private int MaxRecursions;
+
         public List<Curve> BSPCrvs { get; set; } // transformed
         public List<Curve> ResultPolys { get; set; } //reverse transformed final solution
+        public List<Curve> BBxCrvs { get; set; } //bbx polylines
         Random rnd = new Random();
-
-        public int RecursionCounter = 0;
-        public int NumPendantPoly = 0;
 
         private Rhino.Geometry.Transform XForm;
         private Rhino.Geometry.Transform reverseXForm;
@@ -35,7 +36,7 @@ namespace DotsProj
             AdjObjLi = adjObjLi_;
             NorGeomObjLi = norGeomObjLi_;
             Rotation = Rhino.RhinoMath.ToRadians(rot);
-            
+
             Point3d SITE_CEN = AreaMassProperties.Compute(SITE_CRV).Centroid;
             XForm = Rhino.Geometry.Transform.Rotation(Rotation, SITE_CEN);
             reverseXForm = Rhino.Geometry.Transform.Rotation(-Rotation, SITE_CEN);
@@ -50,24 +51,63 @@ namespace DotsProj
         public void GenerateInitialCurve()
         {
             ResultPolys = new List<Curve>();
-            HorSplit(rot_SITE_CRV);
-            //VerSplit(rot_SITE_CRV);
-            foreach (Curve crvR in BSPCrvs)
+            BBxCrvs = new List<Curve>();
+
+            // initialize stack
+            List<Point3d> iniPtLi = new List<Point3d>();
+            Point3d[] ptArr = GetBBoxPoly(rot_SITE_CRV);
+            iniPtLi.AddRange(ptArr);
+            PolylineCurve iniBBX = new PolylineCurve(iniPtLi);
+            //iniBBX.Transform(XForm);
+            BSPCrvs.Add(iniBBX);
+            // BSPCrvs.Add(rot_SITE_CRV);
+
+            MaxRecursions = 15;
+            globalRecursionCounter = 0;
+            runRecursions(); // run the recursions & update global vars
+
+            for (int i = MaxRecursions; i < BSPCrvs.Count; i++)
             {
-                Curve c2 = crvR.DuplicateCurve();
+                Curve c2 = BSPCrvs[i].DuplicateCurve();
                 c2.Transform(reverseXForm);
                 ResultPolys.Add(c2);
             }
         }
 
-        public void HorSplit(Curve iniPoly)
+        public void runRecursions()
         {
-            Point3d[] B = GetBBoxPoly(iniPoly);
-            Point3d a = B[0];
-            Point3d b = B[1];
-            Point3d c = B[2];
-            Point3d d = B[3];
-            double t = rnd.NextDouble()*0.5 + 0.25;
+            Curve crv = BSPCrvs[globalRecursionCounter];
+            List<Point3d> iniPtLi = GetPolyPts(crv);
+            Point3d a = iniPtLi[0];
+            Point3d b = iniPtLi[1];
+            Point3d c = iniPtLi[2];
+            Point3d d = iniPtLi[3];
+            if (globalRecursionCounter < MaxRecursions)
+            {
+                globalRecursionCounter++;
+                // int t = rnd.Next(0, 9);
+                // if (t > 5)
+                if(a.DistanceTo(b)<a.DistanceTo(d))
+                {
+                    HorSplit(crv);
+                }
+                else
+                {
+                    VerSplit(crv);
+                }
+                runRecursions();
+            }
+        }
+
+        public void VerSplit(Curve iniPoly)
+        {
+            List<Point3d> iniPtLi = GetPolyPts(iniPoly);
+            Point3d a = iniPtLi[0];
+            Point3d b = iniPtLi[1];
+            Point3d c = iniPtLi[2];
+            Point3d d = iniPtLi[3];
+
+            double t = rnd.NextDouble() * 0.5 + 0.25;
             Point3d e = new Point3d(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t, 0);
             Point3d f = new Point3d(d.X + (c.X - d.X) * t, d.Y + (c.Y - d.Y) * t, 0);
 
@@ -77,32 +117,21 @@ namespace DotsProj
             PolylineCurve left = new PolylineCurve(le);
             PolylineCurve right = new PolylineCurve(ri);
 
-            Curve[] leftCrv = Curve.CreateBooleanIntersection(left, rot_SITE_CRV);
-            Curve[] rightCrv = Curve.CreateBooleanIntersection(right, rot_SITE_CRV);
-
-
-            foreach (Curve crvL in leftCrv)
-            {
-                //crvL.Transform(reverseXForm);
-                BSPCrvs.Add(crvL);
-            }
-            foreach (Curve crvR in rightCrv)
-            {
-                //crvR.Transform(reverseXForm);
-                BSPCrvs.Add(crvR);
-            }
+            BSPCrvs.Add(left);
+            BSPCrvs.Add(right);
         }
-     
-        public void VerSplit(Curve iniPoly)
+
+        public void HorSplit(Curve iniPoly)
         {
-            Point3d[] B = GetBBoxPoly(iniPoly);
-            Point3d a = B[0];
-            Point3d b = B[1];
-            Point3d c = B[2];
-            Point3d d = B[3];
+            List<Point3d> iniPtLi = GetPolyPts(iniPoly);
+            Point3d a = iniPtLi[0];
+            Point3d b = iniPtLi[1];
+            Point3d c = iniPtLi[2];
+            Point3d d = iniPtLi[3];
+
             double t = rnd.NextDouble() * 0.5 + 0.25;
             Point3d e = new Point3d(a.X + (d.X - a.X) * t, a.Y + (d.Y - a.Y) * t, 0);
-            Point3d f = new Point3d(d.X + (c.X - b.X) * t, d.Y + (c.Y - b.Y) * t, 0);
+            Point3d f = new Point3d(b.X + (c.X - b.X) * t, b.Y + (c.Y - b.Y) * t, 0);
 
             List<Point3d> up_ = new List<Point3d> { a, b, f, e, a };
             List<Point3d> dn_ = new List<Point3d> { e, f, c, d, e };
@@ -110,20 +139,8 @@ namespace DotsProj
             PolylineCurve up = new PolylineCurve(up_);
             PolylineCurve dn = new PolylineCurve(dn_);
 
-            Curve[] upCrv = Curve.CreateBooleanIntersection(up, rot_SITE_CRV);
-            Curve[] dnCrv = Curve.CreateBooleanIntersection(dn, rot_SITE_CRV);
-
-
-            foreach (Curve crvU in upCrv)
-            {
-                //crvL.Transform(reverseXForm);
-                BSPCrvs.Add(crvU);
-            }
-            foreach (Curve crvD in dnCrv)
-            {
-                //crvR.Transform(reverseXForm);
-                BSPCrvs.Add(crvD);
-            }
+            BSPCrvs.Add(up);
+            BSPCrvs.Add(dn);
         }
 
         public Point3d[] GetBBoxPoly(Curve crv)
@@ -136,7 +153,20 @@ namespace DotsProj
             Point3d[] pts = { a, b, c, d, a };
             List<Point3d> ptsLi = new List<Point3d> { a, b, c, d, a };
             PolylineCurve poly = new PolylineCurve(ptsLi);
+            Curve bbxCrv = (Curve)poly;
+            BBxCrvs.Add(bbxCrv);
             return pts;
+        }
+        public List<Point3d> GetPolyPts(Curve crv)
+        {
+            var t = crv.TryGetPolyline(out Polyline pts);
+            IEnumerator<Point3d> ptEnum = pts.GetEnumerator();
+            List<Point3d> ptLi = new List<Point3d>();
+            while (ptEnum.MoveNext())
+            {
+                ptLi.Add(ptEnum.Current);
+            }
+            return ptLi;
         }
     }
 }
